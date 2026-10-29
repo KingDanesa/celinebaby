@@ -9,6 +9,7 @@ export function Wordmark({ className, width = 150 }: { className?: string; width
       width={width}
       height={Math.round((width * 32) / 188)}
       priority
+      unoptimized
       className={cn("h-auto", className)}
     />
   );
@@ -21,6 +22,7 @@ export function Monogram({ className, size = 48 }: { className?: string; size?: 
       alt=""
       width={size}
       height={Math.round((size * 940) / 1108)}
+      unoptimized
       className={cn("h-auto", className)}
       aria-hidden
     />
