@@ -45,3 +45,6 @@ next-env.d.ts
 /data/orders.json
 /public/uploads
 !.env.example
+
+.vercel
+.env*
