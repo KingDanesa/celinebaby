@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette — Celine Baby brandbook, Rose Gold #B46B7A */
+  --color-rose-50: #fdf2f4;
+  --color-rose-100: #f9e2e6;
+  --color-rose-200: #f5d6dd;
+  --color-rose-300: #ebc2ca;
+  --color-rose-400: #e6a8b5;
+  --color-rose-500: #d48c9b;
+  --color-rose-600: #b46b7a;
+  --color-rose-700: #95505f;
+  --color-rose-800: #743844;
+  --color-rose-900: #50222c;
+  --color-rose-950: #2b0e14;
+
+  /* Warm neutrals */
+  --color-cream: #fcfaf8;
+  --color-sand: #f5f0ec;
+  --color-stone: #ebe4df;
+  --color-line: #e7dfdb;
+  --color-ink: #2a1c20;
+  --color-ink-soft: #4f3f44;
+  --color-muted: #8a7a7f;
+
+  --font-display: var(--font-comfortaa), "Comfortaa", system-ui, sans-serif;
+  --font-sans: var(--font-manrope), "Manrope", system-ui, sans-serif;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-cream text-ink font-sans;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: #f5d6dd;
+    color: #2b0e14;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  button, [role="button"] {
+    cursor: pointer;
+  }
+  input, select, textarea {
+    @apply outline-none;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-600;
+  }
+  .btn,
+  .btn-primary,
+  .btn-dark,
+  .btn-outline,
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 ease-soft disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98];
+  }
+  .btn-dark {
+    @apply bg-ink text-white hover:bg-rose-900 active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply border border-ink/15 bg-transparent text-ink hover:border-rose-600 hover:text-rose-700;
+  }
+  .btn-ghost {
+    @apply bg-white/80 text-ink backdrop-blur hover:bg-white;
+  }
+  .link-underline {
+    @apply relative after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-current after:transition-transform after:duration-300 hover:after:origin-left hover:after:scale-x-100;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-muted focus:border-rose-500 focus:ring-2 focus:ring-rose-200 transition;
+  }
+  .prose-soft p {
+    @apply mb-3 leading-relaxed text-ink-soft;
+  }
+  .prose-soft ul, .prose-soft ol {
+    @apply mb-3 list-disc pl-5 text-ink-soft;
+  }
+  .prose-soft li {
+    @apply mb-1;
+  }
+  .prose-soft h2 {
+    @apply mt-8 mb-3 text-xl font-semibold text-ink;
+  }
+  .prose-soft h3 {
+    @apply mt-6 mb-2 text-lg font-semibold text-ink;
+  }
+  .prose-soft strong { @apply text-ink; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .watercolor-fade {
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.35) 60%, transparent);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.35) 60%, transparent);
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-up { animation: fade-up 0.7s var(--ease-soft) both; }
+.animate-slide-in-right { animation: slide-in-right 0.35s var(--ease-soft) both; }
+.animate-slide-in-left { animation: slide-in-left 0.35s var(--ease-soft) both; }
+.animate-fade-in { animation: fade-in 0.3s ease both; }
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
