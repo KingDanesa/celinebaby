@@ -13,7 +13,7 @@ export function HeroTiles({ t, href }: { t: Dictionary; href: H }) {
       <Link href={href("/catalog/newborn")} className={`${tile} bg-pink-deep`}>
         <Parallax strength={0.07}>
           <video
-            className="absolute inset-0 h-full w-full object-cover object-[center_45%] opacity-95"
+            className="absolute inset-0 h-full w-full object-cover object-[center_18%] opacity-95"
             autoPlay
             muted
             loop
