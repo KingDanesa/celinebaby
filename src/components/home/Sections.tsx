@@ -6,6 +6,7 @@ import type { BlogPost } from "@/lib/types";
 import { imageUrl, cn } from "@/lib/format";
 import { homeTiles, STORE } from "@/data/categories";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Monogram } from "@/components/ui/Logo";
 
 type H = (p: string) => string;
 
@@ -51,7 +52,7 @@ export function DischargeTile({ t, href }: { t: Dictionary; href: H }) {
 export function StoreTile({ t }: { t: Dictionary }) {
   return (
     <section className="flex flex-col items-center justify-center bg-blue px-6 py-16 text-center text-ink sm:py-20 lg:min-h-[520px]">
-      <span className="font-display text-[28px] font-bold text-rose-600">{"//"}</span>
+      <Monogram size={44} className="opacity-70" />
       <h2 className="display-caps mt-3 text-[28px] sm:text-[clamp(24px,3.2vw,40px)]">{t.home.storeTitle}</h2>
       <p className="mt-4 text-[13px] font-semibold uppercase tracking-[0.12em]">{t.home.storeAddress}</p>
       <p className="mt-1.5 text-[13px] uppercase tracking-[0.12em] text-ink-soft">{t.home.storeHours}</p>

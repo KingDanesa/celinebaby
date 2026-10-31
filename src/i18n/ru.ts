@@ -45,10 +45,10 @@ const ru = {
     toddlerTitle: "Дети",
     toddlerSub: "1,5–4 года",
     tiles: {
-      outer: "Верхняя // одежда",
-      bodysuits: "Боди // Слипы",
-      sets: "Костюмы // Комплекты",
-      hats: "Шапки // Аксессуары",
+      outer: "Верхняя одежда",
+      bodysuits: "Боди и слипы",
+      sets: "Костюмы и комплекты",
+      hats: "Шапки и аксессуары",
     } as Record<string, string>,
     newTitle: "Новинки",
     seeAll: "Смотреть все",
@@ -59,7 +59,7 @@ const ru = {
     storeHours: "Ежедневно с 10:00 до 19:00",
     storeCta: "Как нас найти",
     benefits: [
-      { title: "Leoking // НВ // US Polo", text: "Официальный дистрибьютор" },
+      { title: "Leoking, НВ, US Polo", text: "Официальный дистрибьютор" },
       { title: "Отправка за 48 часов", text: "По всему Казахстану" },
       { title: "Бесплатная доставка", text: "От 50 000 ₸" },
       { title: "Подарочные сертификаты", text: "В магазине и онлайн" },
