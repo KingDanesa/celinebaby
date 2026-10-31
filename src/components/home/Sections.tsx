@@ -41,7 +41,7 @@ export function DischargeTile({ t, href }: { t: Dictionary; href: H }) {
       <div className="absolute inset-0 bg-pink-deep/30 mix-blend-multiply" />
       <div className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent" />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white [text-shadow:0_2px_30px_rgba(43,14,20,0.45)]">
-        <h2 className="display-caps max-w-md px-6 text-[34px] sm:text-[44px] lg:text-[52px]">{t.home.dischargeTitle}</h2>
+        <h2 className="display-caps max-w-md px-6 text-[34px] sm:text-[clamp(28px,4.2vw,52px)]">{t.home.dischargeTitle}</h2>
         <p className="mt-3 text-[15px] font-medium sm:text-[18px]">{t.home.dischargeSub}</p>
       </div>
     </Link>
@@ -52,7 +52,7 @@ export function StoreTile({ t }: { t: Dictionary }) {
   return (
     <section className="flex flex-col items-center justify-center bg-blue px-6 py-16 text-center text-ink sm:py-20 lg:min-h-[520px]">
       <span className="font-display text-[28px] font-bold text-rose-600">{"//"}</span>
-      <h2 className="display-caps mt-3 text-[28px] sm:text-[36px] lg:text-[40px]">{t.home.storeTitle}</h2>
+      <h2 className="display-caps mt-3 text-[28px] sm:text-[clamp(24px,3.2vw,40px)]">{t.home.storeTitle}</h2>
       <p className="mt-4 text-[13px] font-semibold uppercase tracking-[0.12em]">{t.home.storeAddress}</p>
       <p className="mt-1.5 text-[13px] uppercase tracking-[0.12em] text-ink-soft">{t.home.storeHours}</p>
       <a href={STORE.map} target="_blank" rel="noreferrer" className="btn-outline mt-7 px-6 py-2.5 text-[11px]">

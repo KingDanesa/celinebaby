@@ -37,7 +37,7 @@ export function HeroTiles({ t, href }: { t: Dictionary; href: H }) {
 function TileText({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white [text-shadow:0_2px_30px_rgba(43,14,20,0.45)]">
-      <h2 className="display-caps text-[56px] sm:text-[72px] lg:text-[96px]">{title}</h2>
+      <h2 className="display-caps text-[56px] sm:text-[clamp(40px,8vw,96px)]">{title}</h2>
       <p className="mt-3 text-[16px] font-medium sm:text-[20px]">{sub}</p>
     </div>
   );
