@@ -61,7 +61,8 @@ function initial(p: Product | null): ProductInput {
     composition: p?.composition ?? "",
     care: p?.care ?? "",
     lining: p?.lining ?? "",
-    tags: p?.tags ?? [],
+    tags: (p?.tags ?? []).filter((t) => t !== "new"),
+    showInNew: p?.showInNew ?? false,
     inStock: p?.inStock ?? true,
     status: p?.status ?? "active",
   };
@@ -170,7 +171,7 @@ export function ProductForm({ product }: { product: Product | null }) {
               </Field>
               <Field label="Возраст" required hint="Можно отметить оба">
                 <div className="flex flex-wrap gap-2">
-                  {([["newborn", "Новорождённым 0–18 мес"], ["toddler", "Малышам 1,5–4 года"]] as const).map(([v, l]) => (
+                  {([["newborn", "Малыши 0–18 мес"], ["toddler", "Дети 1,5–4 года"]] as const).map(([v, l]) => (
                     <Chip key={v} on={f.ages.includes(v)} onClick={() => set("ages", toggle(f.ages, v))}>
                       {l}
                     </Chip>
@@ -178,9 +179,12 @@ export function ProductForm({ product }: { product: Product | null }) {
                 </div>
               </Field>
             </div>
+            {f.category === "platya-i-yubki" && f.gender !== "girl" && (
+              <p className="rounded-xl bg-cream px-4 py-2 text-[13px] text-ink-soft">По структуре каталога платья и юбки есть только у девочек. Проверьте поле «Для кого».</p>
+            )}
             <Field label="Метки">
               <div className="flex flex-wrap gap-2">
-                {([["new", "Новинка"], ["hit", "Хит продаж"], ["sale", "Скидка"]] as const).map(([v, l]) => (
+                {([["hit", "Хит продаж"], ["sale", "Скидка"]] as const).map(([v, l]) => (
                   <Chip key={v} on={f.tags.includes(v)} onClick={() => set("tags", toggle(f.tags, v))}>
                     {l}
                   </Chip>
@@ -314,6 +318,13 @@ export function ProductForm({ product }: { product: Product | null }) {
               <input type="checkbox" checked={f.inStock} onChange={(e) => set("inStock", e.target.checked)} className="h-5 w-5 accent-rose-600" />
             </label>
             <div className="mt-4 flex flex-col gap-2">
+              <label className="mb-2 flex items-start justify-between gap-3 rounded-xl bg-pink-soft px-3 py-2.5 text-[14px]">
+                <span>
+                  <span className="block font-semibold">В новинки</span>
+                  <span className="block text-[12px] text-muted">Показывать в слайдере «Новинки» на главной (первые 10 по дате изменения)</span>
+                </span>
+                <input type="checkbox" checked={f.showInNew} onChange={(e) => set("showInNew", e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-rose-600" />
+              </label>
               <button type="button" disabled={pending} onClick={() => submit("active")} className="btn-primary w-full">
                 {saved ? <Check className="h-4 w-4" /> : null}
                 {pending ? "Сохраняем…" : saved ? "Сохранено" : "Сохранить и показать на сайте"}

@@ -2,37 +2,43 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Dictionary } from "@/i18n";
 
-export function Hero({ t, href }: { t: Dictionary; href: (p: string) => string }) {
+type H = (p: string) => string;
+
+/** Two big age tiles: video for "Малыши", photo for "Дети". */
+export function HeroTiles({ t, href }: { t: Dictionary; href: H }) {
   return (
-    <section className="container-x pt-3 sm:pt-5">
-      <div className="relative overflow-hidden rounded-[28px] bg-sand sm:rounded-[36px]">
-        <div className="relative aspect-[4/5] w-full sm:aspect-[16/9] lg:aspect-[21/9] lg:max-h-[680px]">
-          <Image
-            src="/img/hero.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-[70%_30%] sm:object-[center_30%]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/45 to-ink/10 sm:bg-gradient-to-r sm:from-ink/65 sm:via-ink/30 sm:to-transparent" />
-        </div>
-        <div className="absolute inset-0 flex items-end p-6 sm:items-center sm:p-12 lg:p-16">
-          <div className="max-w-xl text-white animate-fade-up [text-shadow:0_2px_24px_rgba(43,14,20,0.35)]">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/85 sm:text-xs">{t.home.heroEyebrow}</p>
-            <h1 className="text-[30px] leading-[1.05] font-semibold sm:text-[48px] lg:text-[60px]">{t.home.heroTitle}</h1>
-            <p className="mt-3 max-w-md text-[14px] leading-relaxed text-white/90 sm:mt-4 sm:text-base">{t.home.heroSubtitle}</p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link href={href("/catalog")} className="btn bg-white text-ink hover:bg-rose-50">
-                {t.home.heroCta}
-              </Link>
-              <Link href={href("/catalog/nabory-na-vypisku")} className="btn border border-white/60 text-white backdrop-blur-sm hover:bg-white/15">
-                {t.home.heroCta2}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <>
+      <Link href={href("/catalog/newborn")} className="group relative block aspect-[4/5] overflow-hidden bg-pink-deep sm:aspect-auto sm:h-[72vh] sm:max-h-[760px] sm:min-h-[520px]">
+        <video
+          className="absolute inset-0 h-full w-full object-cover object-[center_60%] opacity-95 transition-transform duration-[1200ms] ease-soft group-hover:scale-[1.03]"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/video/babies-poster.jpg"
+        >
+          <source src="/video/babies.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-pink-deep/35 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-transparent" />
+        <TileText title={t.home.newbornTitle} sub={t.home.newbornSub} />
+      </Link>
+      <Link href={href("/catalog/toddler")} className="group relative block aspect-[4/5] overflow-hidden bg-blue sm:aspect-auto sm:h-[72vh] sm:max-h-[760px] sm:min-h-[520px]">
+        <Image src="/img/covers/deti.jpg" alt="" fill priority sizes="(max-width: 640px) 100vw, 50vw" className="object-cover object-[center_30%] transition-transform duration-[1200ms] ease-soft group-hover:scale-[1.03]" />
+        <div className="absolute inset-0 bg-blue-deep/30 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-transparent" />
+        <TileText title={t.home.toddlerTitle} sub={t.home.toddlerSub} />
+      </Link>
+    </>
+  );
+}
+
+function TileText({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white [text-shadow:0_2px_30px_rgba(43,14,20,0.45)]">
+      <h2 className="display-caps text-[56px] sm:text-[72px] lg:text-[96px]">{title}</h2>
+      <p className="mt-3 text-[16px] font-medium sm:text-[20px]">{sub}</p>
+    </div>
   );
 }

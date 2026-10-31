@@ -9,6 +9,7 @@ function normalise(p: Product): Product {
   return {
     ...p,
     status: p.status ?? "active",
+    showInNew: p.showInNew ?? false,
     oldPrice: p.oldPrice ?? null,
     brand: p.brand ?? null,
     tags: p.tags ?? [],
@@ -26,8 +27,9 @@ const loadAll = unstable_cache(
     const list = await store.listProducts();
     return list.map(normalise);
   },
-  ["products-all"],
-  { tags: [PRODUCTS_TAG] },
+  ["products-all-v2"],
+  // Admin actions invalidate the tag; the timer is a safety net for edits made outside the app (scripts, SQL).
+  { tags: [PRODUCTS_TAG], revalidate: 300 },
 );
 
 /** All products including drafts (admin). */

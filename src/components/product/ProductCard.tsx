@@ -15,10 +15,16 @@ export function ProductCard({
   product,
   priority = false,
   className,
+  tone = "pink",
+  badge,
 }: {
   product: Product;
   priority?: boolean;
   className?: string;
+  /** Pastel background behind the photo, alternated in grids like the approved layout. */
+  tone?: "pink" | "blue";
+  /** Force the "Новинка" label (home slider). */
+  badge?: "new";
 }) {
   const { t, href } = useI18n();
   const { toggleWishlist, inWishlist, hydrated } = useCart();
@@ -33,7 +39,7 @@ export function ProductCard({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <Link href={href(`/product/${product.slug}`)} className="relative block overflow-hidden rounded-2xl bg-sand">
+      <Link href={href(`/product/${product.slug}`)} className={cn("relative block overflow-hidden rounded-xl", tone === "blue" ? "bg-blue-soft" : "bg-pink-soft")}>
         <div className="relative aspect-[4/5] w-full">
           <Image
             src={imageUrl(product.images[0])}
@@ -60,7 +66,7 @@ export function ProductCard({
           )}
         </div>
         <div className="absolute left-3 top-3 flex flex-col gap-1.5">
-          {product.tags.includes("new") && <Tag>{t.catalog.tagNew}</Tag>}
+          {(badge === "new" || product.showInNew) && <Tag>{t.catalog.tagNew}</Tag>}
           {product.tags.includes("hit") && <Tag tone="rose">{t.catalog.tagHit}</Tag>}
           {product.tags.includes("sale") && <Tag tone="dark">{t.catalog.tagSale}</Tag>}
         </div>

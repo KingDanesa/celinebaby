@@ -11,6 +11,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { getMenuData } from "@/lib/menu";
 import { loadProducts } from "@/lib/products";
+import { getCurrentUser } from "@/lib/auth/server";
 
 const comfortaa = Comfortaa({
   variable: "--font-comfortaa",
@@ -50,14 +51,15 @@ export default async function RootLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const dict = getDictionary(locale as Locale);
-  const menu = getMenuData(await loadProducts());
+  const [products, user] = await Promise.all([loadProducts(), getCurrentUser()]);
+  const menu = getMenuData(products);
 
   return (
     <html lang={locale} className={`${comfortaa.variable} ${manrope.variable} h-full`}>
       <body className="flex min-h-full flex-col">
         <I18nProvider locale={locale as Locale} dict={dict}>
           <CartProvider>
-            <Header menu={menu} />
+            <Header menu={menu} userName={user?.name ?? null} />
             <main className="flex-1">{children}</main>
             <Footer t={dict} locale={locale as Locale} />
             <CartDrawer />

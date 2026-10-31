@@ -10,13 +10,14 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { cn, formatPrice, imageUrl } from "@/lib/format";
 import { FREE_DELIVERY_FROM } from "@/data/categories";
 import { placeOrder } from "@/lib/actions/orders";
+import type { SiteUser } from "@/lib/types";
 
-export function CheckoutForm() {
+export function CheckoutForm({ user, onlinePayment }: { user: SiteUser | null; onlinePayment: boolean }) {
   const { t, href, locale } = useI18n();
   const { items, subtotal, clear, hydrated } = useCart();
   const router = useRouter();
   const [delivery, setDelivery] = useState(t.checkout.deliveryMethods[0].id);
-  const [payment, setPayment] = useState(t.checkout.paymentMethods[0].id);
+  const [payment, setPayment] = useState(onlinePayment ? "halyk" : "kaspi");
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -33,18 +34,18 @@ export function CheckoutForm() {
   }
 
   const free = subtotal >= FREE_DELIVERY_FROM;
+  const methods = t.checkout.paymentMethods.filter((m) => onlinePayment || m.id !== "halyk");
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const required = ["name", "phone", "city"];
-    if (required.some((k) => !(fd.get(k) as string)?.trim())) {
+    const get = (k: string) => String(fd.get(k) ?? "");
+    if (!get("name").trim() || !get("phone").trim() || !get("city").trim()) {
       setError(true);
       return;
     }
     setBusy(true);
     setError(false);
-    const get = (k: string) => String(fd.get(k) ?? "");
     placeOrder({
       items,
       delivery,
@@ -59,7 +60,7 @@ export function CheckoutForm() {
           return;
         }
         clear();
-        router.push(href(`/checkout/success?order=${res.id}`));
+        router.push(res.next);
       })
       .catch(() => {
         setError(true);
@@ -70,27 +71,30 @@ export function CheckoutForm() {
   return (
     <div className="container-x pt-6 sm:pt-10">
       <h1 className="text-[30px] font-semibold sm:text-[40px]">{t.checkout.title}</h1>
+      {!user && (
+        <p className="mt-2 text-[14px] text-muted">
+          {t.checkout.loginHint}{" "}
+          <Link href={href(`/account/login?next=${encodeURIComponent(href("/checkout"))}`)} className="font-semibold text-rose-700 underline-offset-2 hover:underline">
+            {t.checkout.loginLink}
+          </Link>
+          . {t.checkout.guestHint}
+        </p>
+      )}
       <form onSubmit={onSubmit} className="mt-8 grid gap-10 lg:grid-cols-12" noValidate>
         <div className="flex flex-col gap-10 lg:col-span-7">
           <Section n={1} title={t.checkout.contact}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t.checkout.name} name="name" required autoComplete="name" />
-              <Field label={t.checkout.phone} name="phone" required type="tel" placeholder="+7 (___) ___ __ __" autoComplete="tel" />
-              <Field label={t.checkout.email} name="email" type="email" autoComplete="email" className="sm:col-span-2" />
+              <Field label={t.checkout.name} name="name" required autoComplete="name" defaultValue={user?.name} />
+              <Field label={t.checkout.phone} name="phone" required type="tel" placeholder="+7 (___) ___ __ __" autoComplete="tel" defaultValue={user?.phone} />
+              <Field label={t.checkout.email} name="email" type="email" autoComplete="email" className="sm:col-span-2" defaultValue={user?.email} hint={t.checkout.emailHint} />
             </div>
           </Section>
 
           <Section n={2} title={t.checkout.deliveryTitle}>
             <div className="grid gap-3">
               {t.checkout.deliveryMethods.map((m) => (
-                <label
-                  key={m.id}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-4 rounded-2xl border bg-white p-4 transition",
-                    delivery === m.id ? "border-ink ring-1 ring-ink" : "border-line hover:border-ink/40",
-                  )}
-                >
-                  <input type="radio" name="delivery" value={m.id} checked={delivery === m.id} onChange={() => setDelivery(m.id)} className="accent-rose-600" />
+                <label key={m.id} className={cn("flex cursor-pointer items-center gap-4 rounded-2xl border bg-white p-4 transition", delivery === m.id ? "border-ink ring-1 ring-ink" : "border-line hover:border-ink/40")}>
+                  <input type="radio" name="delivery" value={m.id} checked={delivery === m.id} onChange={() => setDelivery(m.id)} className="accent-burgundy" />
                   <span className="flex-1">
                     <span className="block text-[14px] font-semibold">{m.title}</span>
                     <span className="block text-[12px] text-muted">{m.text}</span>
@@ -100,22 +104,16 @@ export function CheckoutForm() {
               ))}
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label={t.checkout.city} name="city" required autoComplete="address-level2" />
-              <Field label={t.checkout.address} name="address" autoComplete="street-address" />
+              <Field label={t.checkout.city} name="city" required autoComplete="address-level2" defaultValue={user?.city} />
+              <Field label={t.checkout.address} name="address" autoComplete="street-address" defaultValue={user?.address} />
               <Field label={t.checkout.comment} name="comment" textarea className="sm:col-span-2" />
             </div>
           </Section>
 
           <Section n={3} title={t.checkout.paymentTitle}>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {t.checkout.paymentMethods.map((m) => (
-                <label
-                  key={m.id}
-                  className={cn(
-                    "flex cursor-pointer flex-col gap-1 rounded-2xl border bg-white p-4 transition",
-                    payment === m.id ? "border-ink ring-1 ring-ink" : "border-line hover:border-ink/40",
-                  )}
-                >
+            <div className="grid gap-3 sm:grid-cols-2">
+              {methods.map((m) => (
+                <label key={m.id} className={cn("flex cursor-pointer flex-col gap-1 rounded-2xl border bg-white p-4 transition", payment === m.id ? "border-ink ring-1 ring-ink" : "border-line hover:border-ink/40")}>
                   <input type="radio" name="payment" value={m.id} checked={payment === m.id} onChange={() => setPayment(m.id)} className="sr-only" />
                   <span className="text-[14px] font-semibold">{m.title}</span>
                   <span className="text-[12px] text-muted">{m.text}</span>
@@ -126,7 +124,7 @@ export function CheckoutForm() {
         </div>
 
         <aside className="lg:col-span-5">
-          <div className="sticky top-[100px] rounded-3xl bg-sand p-6">
+          <div className="sticky top-[100px] rounded-3xl bg-pink-soft p-6">
             <p className="font-semibold">{t.checkout.summary}</p>
             <ul className="mt-4 max-h-72 divide-y divide-line/70 overflow-y-auto">
               {items.map((i) => (
@@ -160,7 +158,7 @@ export function CheckoutForm() {
             </div>
             {error && <p className="mt-4 rounded-xl bg-rose-100 px-4 py-2 text-[13px] text-rose-800">{t.checkout.required}</p>}
             <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
-              <Lock className="h-4 w-4" /> {t.checkout.pay} · {formatPrice(subtotal)}
+              <Lock className="h-4 w-4" /> {payment === "halyk" ? t.checkout.pay : t.checkout.place} · {formatPrice(subtotal)}
             </button>
             <p className="mt-3 text-[11px] leading-relaxed text-muted">{t.checkout.agree}</p>
           </div>
@@ -174,7 +172,7 @@ function Section({ n, title, children }: { n: number; title: string; children: R
   return (
     <section>
       <h2 className="mb-4 flex items-center gap-3 text-[18px] font-semibold">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-[12px] text-white">{n}</span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-burgundy text-[12px] text-white">{n}</span>
         {title}
       </h2>
       {children}
@@ -191,6 +189,8 @@ function Field({
   className,
   placeholder,
   autoComplete,
+  defaultValue,
+  hint,
 }: {
   label: string;
   name: string;
@@ -200,6 +200,8 @@ function Field({
   className?: string;
   placeholder?: string;
   autoComplete?: string;
+  defaultValue?: string;
+  hint?: string;
 }) {
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
@@ -209,8 +211,9 @@ function Field({
       {textarea ? (
         <textarea name={name} rows={3} className="input resize-none" placeholder={placeholder} />
       ) : (
-        <input name={name} type={type} className="input" placeholder={placeholder} autoComplete={autoComplete} />
+        <input name={name} type={type} className="input" placeholder={placeholder} autoComplete={autoComplete} defaultValue={defaultValue} />
       )}
+      {hint && <span className="text-[11px] text-muted">{hint}</span>}
     </label>
   );
 }

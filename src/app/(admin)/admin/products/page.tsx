@@ -109,7 +109,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                 <td className="hidden px-4 py-2.5 text-ink-soft md:table-cell">{ru.categories[p.category]}</td>
                 <td className="hidden px-4 py-2.5 text-ink-soft lg:table-cell">
                   {{ girl: "Девочкам", boy: "Мальчикам", unisex: "Универсальное" }[p.gender]}
-                  <span className="text-muted"> · {p.ages.map((a) => (a === "newborn" ? "0–18 мес" : "1,5–4 года")).join(", ")}</span>
+                  <span className="text-muted"> · {p.ages.map((a) => (a === "newborn" ? "Малыши 0–18" : "Дети 1,5–4")).join(", ")}</span>
                 </td>
                 <td className="whitespace-nowrap px-4 py-2.5 text-right font-medium tabular-nums">{formatPrice(p.price)}</td>
                 <td className="hidden px-4 py-2.5 sm:table-cell">

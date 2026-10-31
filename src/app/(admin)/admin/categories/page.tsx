@@ -53,7 +53,7 @@ export default async function CategoriesPage() {
             <p className="mt-3 text-[12px] text-muted">Универсальные товары показываются и девочкам, и мальчикам.</p>
           </Card>
           <Card title="Возраст">
-            <Axis rows={[["Новорождённым 0–18 мес", count((p) => p.ages.includes("newborn"))], ["Малышам 1,5–4 года", count((p) => p.ages.includes("toddler"))]]} />
+            <Axis rows={[["Малыши 0–18 мес", count((p) => p.ages.includes("newborn"))], ["Дети 1,5–4 года", count((p) => p.ages.includes("toddler"))]]} />
           </Card>
           <Card title="Метки">
             <Axis rows={[["Новинка", count((p) => p.tags.includes("new"))], ["Хит продаж", count((p) => p.tags.includes("hit"))], ["Скидка", count((p) => p.tags.includes("sale"))]]} />

@@ -16,4 +16,4 @@ export async function getStore(): Promise<Store> {
   return cached;
 }
 
-export type { Store, Order, OrderStatus } from "./types";
+export type { Store, Order, OrderStatus, PaymentStatus } from "./types";

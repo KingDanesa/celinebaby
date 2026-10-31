@@ -9,6 +9,8 @@ import { formatPrice, imageUrl } from "@/lib/format";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
 import ru from "@/i18n/ru";
 
+const paymentStatusLabel: Record<string, string> = { unpaid: "не оплачен", pending: "проверяем", paid: "оплачен", failed: "оплата не прошла" };
+
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
@@ -59,7 +61,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <Row k="Адрес" v={order.customer.address ?? "—"} />
               <Row k="Комментарий" v={order.customer.comment ?? "—"} />
               <Row k="Доставка" v={delivery} />
-              <Row k="Оплата" v={payment} />
+              <Row k="Оплата" v={`${payment} · ${paymentStatusLabel[order.paymentStatus ?? "unpaid"]}`} />
+              {order.invoiceId && <Row k="Инвойс банка" v={`${order.invoiceId}${order.paymentRef ? ` · транзакция ${order.paymentRef}` : ""}`} />}
+              {order.paidAt && <Row k="Оплачен" v={new Date(order.paidAt).toLocaleString("ru-RU")} />}
+              <Row k="Аккаунт" v={order.userId ? "Зарегистрированный покупатель" : "Гость"} />
             </dl>
           </Card>
         </div>

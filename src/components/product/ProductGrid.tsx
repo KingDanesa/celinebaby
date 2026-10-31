@@ -22,7 +22,7 @@ export function ProductGrid({
       )}
     >
       {products.map((p, i) => (
-        <ProductCard key={p.id} product={p} priority={i < priorityCount} />
+        <ProductCard key={p.id} product={p} priority={i < priorityCount} tone={(i + Math.floor(i / 2)) % 2 ? "blue" : "pink"} />
       ))}
     </div>
   );

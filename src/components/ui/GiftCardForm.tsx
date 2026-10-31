@@ -71,7 +71,7 @@ export function GiftCardForm() {
           </div>
         </div>
         {done ? (
-          <p className="rounded-2xl bg-rose-50 px-5 py-4 text-[14px] text-rose-800">{t.checkout.demoNote}</p>
+          <p className="rounded-2xl bg-rose-50 px-5 py-4 text-[14px] text-rose-800">{t.pages.gift.soon}</p>
         ) : (
           <button type="submit" className="btn-primary w-fit">
             {g.cta} · {formatPrice(amount)}

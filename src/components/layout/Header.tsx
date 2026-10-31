@@ -4,32 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, Heart, Menu, Phone, Search, ShoppingBag, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Heart, Menu, Phone, Search, ShoppingBag, User, X } from "lucide-react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useCart } from "@/components/providers/CartProvider";
-import { Wordmark } from "@/components/ui/Logo";
 import { cn, imageUrl } from "@/lib/format";
 import type { MenuData } from "@/lib/menu";
 import { locales, localeNames, type Locale } from "@/i18n/config";
+import { STORE } from "@/data/categories";
 
-export function Header({ menu }: { menu: MenuData }) {
+export function Header({ menu, userName }: { menu: MenuData; userName: string | null }) {
   const { t, href, locale } = useI18n();
   const { count, wishlist, open, hydrated } = useCart();
   const pathname = usePathname();
   const router = useRouter();
-  const [scrolled, setScrolled] = useState(false);
   const [mega, setMega] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [search, setSearch] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Close any open panel when the route changes (state adjusted during render, no effect needed).
   const [lastPath, setLastPath] = useState(pathname);
   if (pathname !== lastPath) {
     setLastPath(pathname);
@@ -45,9 +36,6 @@ export function Header({ menu }: { menu: MenuData }) {
     };
   }, [mobile, search]);
 
-  const openMega = () => setMega(true);
-  const closeMega = () => setMega(false);
-
   const switchLocale = (l: Locale) => {
     // eslint-disable-next-line react-hooks/immutability -- writing a browser cookie, not React state
     document.cookie = `locale=${l}; path=/; max-age=31536000`;
@@ -57,33 +45,29 @@ export function Header({ menu }: { menu: MenuData }) {
 
   const nav = [
     { label: t.nav.new, to: "/catalog/new" },
-    { label: t.nav.girls, to: "/catalog/girls" },
-    { label: t.nav.boys, to: "/catalog/boys" },
+    { label: t.nav.newborn, to: "/catalog/newborn" },
+    { label: t.nav.toddler, to: "/catalog/toddler" },
     { label: t.nav.discharge, to: "/catalog/nabory-na-vypisku" },
-    { label: t.nav.blog, to: "/blog", secondary: true },
-    { label: t.nav.about, to: "/about", secondary: true },
+    { label: t.nav.outerwear, to: "/catalog/verhnyaya-odezhda" },
+    { label: t.nav.store, to: "/contacts" },
   ];
 
   const wishCount = hydrated ? wishlist.length : 0;
   const cartCount = hydrated ? count : 0;
+  const iconBtn = "relative rounded-full p-2 text-white/90 transition hover:bg-white/10 hover:text-white";
 
   return (
     <>
-      <div className="bg-rose-600 text-white">
-        <div className="container-x flex h-9 items-center justify-center text-center text-[11px] font-medium tracking-wide sm:text-xs">
-          {t.announcement}
+      <div className="bg-burgundy-deep text-white/85">
+        <div className="container-x flex h-9 items-center justify-center gap-6 text-center text-[10.5px] font-semibold uppercase tracking-[0.14em] sm:text-[11px]">
+          <span>{t.announcement}</span>
+          <span className="hidden sm:inline">{t.announcement2}</span>
         </div>
       </div>
 
-      <header
-        className={cn(
-          "sticky top-0 z-40 border-b transition-all duration-300",
-          scrolled || mega ? "border-line bg-white/95 backdrop-blur" : "border-transparent bg-cream",
-        )}
-        onMouseLeave={closeMega}
-      >
-        <div className="container-x flex h-[68px] items-center justify-between gap-6 lg:h-[76px]">
-          <div className="flex items-center gap-3 lg:hidden">
+      <header className="sticky top-0 z-40 bg-burgundy text-white shadow-[0_8px_24px_-16px_rgba(43,14,20,0.6)]" onMouseLeave={() => setMega(false)}>
+        <div className="container-x flex h-[64px] items-center justify-between gap-6 lg:h-[72px]">
+          <div className="flex items-center gap-1 lg:hidden">
             <button type="button" aria-label={t.nav.menu} onClick={() => setMobile(true)} className="-ml-2 p-2">
               <Menu className="h-6 w-6" />
             </button>
@@ -93,23 +77,19 @@ export function Header({ menu }: { menu: MenuData }) {
           </div>
 
           <Link href={href("/")} aria-label="Celine Baby" className="shrink-0">
-            <Wordmark width={148} />
+            <Image src="/brand/wordmark.svg" alt="Celine Baby" width={148} height={25} priority unoptimized className="h-auto brightness-0 invert opacity-95" />
           </Link>
 
           <nav className="hidden items-center gap-5 whitespace-nowrap lg:flex xl:gap-7" aria-label="Main">
-            <div onMouseEnter={openMega} className="relative">
+            <div onMouseEnter={() => setMega(true)}>
               <button
                 type="button"
                 onClick={(e) => {
-                  // Hover already opened the panel on desktop; a toggle is only useful for touch.
                   const touch = "pointerType" in e.nativeEvent && (e.nativeEvent as PointerEvent).pointerType === "touch";
                   setMega((v) => (touch ? !v : true));
                 }}
                 aria-expanded={mega}
-                className={cn(
-                  "flex items-center gap-1 py-6 text-[12.5px] font-semibold uppercase tracking-[0.08em] transition xl:text-[13.5px]",
-                  mega ? "text-rose-700" : "text-ink hover:text-rose-700",
-                )}
+                className={cn("flex items-center gap-1 py-6 text-[12px] font-semibold uppercase tracking-[0.12em] transition xl:text-[12.5px]", mega ? "text-rose-200" : "text-white/90 hover:text-white")}
               >
                 {t.nav.catalog}
                 <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", mega && "rotate-180")} />
@@ -119,46 +99,38 @@ export function Header({ menu }: { menu: MenuData }) {
               <Link
                 key={n.to}
                 href={href(n.to)}
-                onMouseEnter={closeMega}
-                className={cn(
-                  "link-underline py-6 text-[12.5px] font-semibold uppercase tracking-[0.08em] text-ink transition hover:text-rose-700 xl:text-[13.5px]",
-                  n.secondary && "hidden xl:inline-block",
-                )}
+                onMouseEnter={() => setMega(false)}
+                className="link-underline py-6 text-[12px] font-semibold uppercase tracking-[0.12em] text-white/90 transition hover:text-white xl:text-[12.5px]"
               >
                 {n.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-2">
-            <div className="mr-1 hidden items-center gap-1 text-[12px] font-semibold uppercase tracking-wider sm:flex xl:mr-2">
+          <div className="flex items-center gap-0.5 sm:gap-1">
+            <div className="mr-1 hidden items-center gap-1 text-[11px] font-semibold uppercase tracking-wider sm:flex xl:mr-2">
               {locales.map((l, i) => (
                 <span key={l} className="flex items-center">
-                  {i > 0 && <span className="mx-1 text-line">/</span>}
-                  <button
-                    type="button"
-                    onClick={() => switchLocale(l)}
-                    className={cn("transition", l === locale ? "text-ink" : "text-muted hover:text-rose-700")}
-                  >
+                  {i > 0 && <span className="mx-1 text-white/30">/</span>}
+                  <button type="button" onClick={() => switchLocale(l)} className={cn("transition", l === locale ? "text-white" : "text-white/50 hover:text-white")}>
                     {localeNames[l]}
                   </button>
                 </span>
               ))}
             </div>
-            <button
-              type="button"
-              aria-label={t.nav.search}
-              onClick={() => setSearch(true)}
-              className="hidden rounded-full p-2 transition hover:bg-sand lg:block"
-            >
-              <Search className="h-[21px] w-[21px]" />
+            <button type="button" aria-label={t.nav.search} onClick={() => setSearch(true)} className={cn(iconBtn, "hidden lg:block")}>
+              <Search className="h-[20px] w-[20px]" />
             </button>
-            <Link href={href("/wishlist")} aria-label={t.nav.wishlist} className="relative rounded-full p-2 transition hover:bg-sand">
-              <Heart className="h-[21px] w-[21px]" />
+            <Link href={href("/wishlist")} aria-label={t.nav.wishlist} className={iconBtn}>
+              <Heart className="h-[20px] w-[20px]" />
               {wishCount > 0 && <Badge>{wishCount}</Badge>}
             </Link>
-            <button type="button" aria-label={t.nav.cart} onClick={open} className="relative rounded-full p-2 transition hover:bg-sand">
-              <ShoppingBag className="h-[21px] w-[21px]" />
+            <Link href={href(userName ? "/account" : "/account/login")} aria-label={t.nav.account} className={cn(iconBtn, "hidden sm:block")}>
+              <User className="h-[20px] w-[20px]" />
+              {userName && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-rose-400" />}
+            </Link>
+            <button type="button" aria-label={t.nav.cart} onClick={open} className={iconBtn}>
+              <ShoppingBag className="h-[20px] w-[20px]" />
               {cartCount > 0 && <Badge>{cartCount}</Badge>}
             </button>
           </div>
@@ -166,42 +138,31 @@ export function Header({ menu }: { menu: MenuData }) {
 
         {/* Mega menu */}
         <div
-          onMouseEnter={openMega}
+          onMouseEnter={() => setMega(true)}
           className={cn(
-            "absolute inset-x-0 top-full hidden border-b border-line bg-white shadow-[0_24px_48px_-24px_rgba(43,14,20,0.25)] transition-all duration-300 lg:block",
+            "absolute inset-x-0 top-full hidden border-t border-white/10 bg-white text-ink shadow-[0_24px_48px_-24px_rgba(43,14,20,0.35)] transition-all duration-300 lg:block",
             mega ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0",
           )}
         >
           <div className="container-x grid grid-cols-12 gap-8 py-9">
             <div className="col-span-3 flex flex-col gap-3">
               <p className="eyebrow">{t.nav.byAge}</p>
-              <AgeTile
-                href={href("/catalog/newborn")}
-                image={menu.ageImages.newborn}
-                title={t.nav.newborn}
-                hint={t.nav.newbornHint}
-              />
-              <AgeTile href={href("/catalog/toddler")} image={menu.ageImages.toddler} title={t.nav.toddler} hint={t.nav.toddlerHint} />
+              <AgeTile href={href("/catalog/newborn")} image={menu.ageImages.newborn} title={t.nav.newbornShort} hint={t.nav.newbornHint} tone="pink" />
+              <AgeTile href={href("/catalog/toddler")} image={menu.ageImages.toddler} title={t.nav.toddlerShort} hint={t.nav.toddlerHint} tone="blue" />
             </div>
             <div className="col-span-4">
               <p className="eyebrow mb-3">{t.nav.byType}</p>
               <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
                 {menu.categories.map((c) => (
                   <li key={c.slug}>
-                    <Link
-                      href={href(`/catalog/${c.slug}`)}
-                      className="group flex items-center justify-between py-1 text-[14px] text-ink-soft transition hover:text-rose-700"
-                    >
+                    <Link href={href(`/catalog/${c.slug}`)} className="group flex items-center justify-between py-1 text-[14px] text-ink-soft transition hover:text-rose-700">
                       <span className="link-underline">{t.categories[c.slug]}</span>
                       <span className="text-[11px] text-muted/70 tabular-nums">{c.count}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
-              <Link
-                href={href("/catalog")}
-                className="mt-5 inline-flex items-center gap-1 text-[13px] font-semibold text-rose-700 hover:text-rose-800"
-              >
+              <Link href={href("/catalog")} className="mt-5 inline-flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wider text-rose-700 hover:text-rose-800">
                 {t.nav.allCatalog} <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
@@ -213,6 +174,8 @@ export function Header({ menu }: { menu: MenuData }) {
                   { label: t.nav.hits, to: "/catalog/hits" },
                   { label: t.nav.discharge, to: "/catalog/nabory-na-vypisku" },
                   { label: t.nav.giftCards, to: "/gift-cards" },
+                  { label: t.nav.blog, to: "/blog" },
+                  { label: t.nav.about, to: "/about" },
                 ].map((l) => (
                   <li key={l.to}>
                     <Link href={href(l.to)} className="link-underline transition hover:text-rose-700">
@@ -230,7 +193,6 @@ export function Header({ menu }: { menu: MenuData }) {
         </div>
       </header>
 
-      {/* Search overlay */}
       {search && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-ink/40 backdrop-blur-sm animate-fade-in" onClick={() => setSearch(false)}>
           <form
@@ -245,12 +207,7 @@ export function Header({ menu }: { menu: MenuData }) {
           >
             <div className="flex items-center gap-3 rounded-2xl bg-white p-2 pl-5 shadow-xl">
               <Search className="h-5 w-5 text-muted" />
-              <input
-                autoFocus
-                name="q"
-                placeholder={t.nav.searchPlaceholder}
-                className="h-12 flex-1 bg-transparent text-[16px] outline-none placeholder:text-muted"
-              />
+              <input autoFocus name="q" placeholder={t.nav.searchPlaceholder} className="h-12 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted" />
               <button type="submit" className="btn-primary h-11 px-5">
                 {t.nav.search}
               </button>
@@ -262,24 +219,28 @@ export function Header({ menu }: { menu: MenuData }) {
         </div>
       )}
 
-      {/* Mobile menu */}
       {mobile && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-ink/40 animate-fade-in" onClick={() => setMobile(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white shadow-2xl animate-slide-in-left">
-            <div className="flex h-[68px] items-center justify-between border-b border-line px-4">
-              <Wordmark width={130} />
+          <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white text-ink shadow-2xl animate-slide-in-left">
+            <div className="flex h-[64px] items-center justify-between border-b border-line px-4">
+              <Image src="/brand/wordmark.svg" alt="Celine Baby" width={130} height={22} unoptimized className="h-auto" />
               <button type="button" aria-label={t.nav.close} onClick={() => setMobile(false)} className="-mr-2 p-2">
                 <X className="h-6 w-6" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-4">
               <div className="grid grid-cols-2 gap-3">
-                <AgeTile href={href("/catalog/newborn")} image={menu.ageImages.newborn} title={t.nav.newborn} hint={t.nav.newbornHint} compact />
-                <AgeTile href={href("/catalog/toddler")} image={menu.ageImages.toddler} title={t.nav.toddler} hint={t.nav.toddlerHint} compact />
+                <AgeTile href={href("/catalog/newborn")} image={menu.ageImages.newborn} title={t.nav.newbornShort} hint={t.nav.newbornHint} tone="pink" compact />
+                <AgeTile href={href("/catalog/toddler")} image={menu.ageImages.toddler} title={t.nav.toddlerShort} hint={t.nav.toddlerHint} tone="blue" compact />
               </div>
               <ul className="mt-5 divide-y divide-line text-[15px] font-semibold">
-                {[{ label: t.nav.new, to: "/catalog/new" }, { label: t.nav.girls, to: "/catalog/girls" }, { label: t.nav.boys, to: "/catalog/boys" }].map((n) => (
+                {[
+                  { label: t.nav.new, to: "/catalog/new" },
+                  { label: t.nav.girls, to: "/catalog/girls" },
+                  { label: t.nav.boys, to: "/catalog/boys" },
+                  { label: t.nav.discharge, to: "/catalog/nabory-na-vypisku" },
+                ].map((n) => (
                   <li key={n.to}>
                     <Link href={href(n.to)} className="flex items-center justify-between py-3.5">
                       {n.label} <ChevronRight className="h-4 w-4 text-muted" />
@@ -299,7 +260,13 @@ export function Header({ menu }: { menu: MenuData }) {
                     </ul>
                   </MobileAccordion>
                 </li>
-                {[{ label: t.nav.giftCards, to: "/gift-cards" }, { label: t.nav.blog, to: "/blog" }, { label: t.nav.about, to: "/about" }, { label: t.footer.contacts, to: "/contacts" }].map((n) => (
+                {[
+                  { label: userName ? t.nav.account : t.nav.login, to: userName ? "/account" : "/account/login" },
+                  { label: t.nav.giftCards, to: "/gift-cards" },
+                  { label: t.nav.store, to: "/contacts" },
+                  { label: t.nav.blog, to: "/blog" },
+                  { label: t.nav.about, to: "/about" },
+                ].map((n) => (
                   <li key={n.to}>
                     <Link href={href(n.to)} className="flex items-center justify-between py-3.5">
                       {n.label} <ChevronRight className="h-4 w-4 text-muted" />
@@ -311,18 +278,13 @@ export function Header({ menu }: { menu: MenuData }) {
             <div className="border-t border-line px-4 py-4">
               <div className="mb-3 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider">
                 {locales.map((l) => (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => switchLocale(l)}
-                    className={cn("rounded-full border px-3 py-1.5", l === locale ? "border-ink bg-ink text-white" : "border-line text-muted")}
-                  >
+                  <button key={l} type="button" onClick={() => switchLocale(l)} className={cn("rounded-full border px-3 py-1.5", l === locale ? "border-ink bg-ink text-white" : "border-line text-muted")}>
                     {localeNames[l]}
                   </button>
                 ))}
               </div>
-              <a href="tel:+77018159663" className="flex items-center gap-2 text-[14px] font-semibold text-ink">
-                <Phone className="h-4 w-4 text-rose-600" /> +7 (701) 815 96 63
+              <a href={`tel:+${STORE.phoneRaw}`} className="flex items-center gap-2 text-[14px] font-semibold text-ink">
+                <Phone className="h-4 w-4 text-rose-600" /> {STORE.phone}
               </a>
             </div>
           </div>
@@ -334,27 +296,19 @@ export function Header({ menu }: { menu: MenuData }) {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+    <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-400 px-1 text-[10px] font-bold text-burgundy">
       {children}
     </span>
   );
 }
 
-function AgeTile({ href, image, title, hint, compact }: { href: string; image: string; title: string; hint: string; compact?: boolean }) {
+function AgeTile({ href, image, title, hint, compact, tone }: { href: string; image: string; title: string; hint: string; compact?: boolean; tone: "pink" | "blue" }) {
   return (
-    <Link href={href} className={cn("group relative block overflow-hidden rounded-2xl bg-sand", compact ? "aspect-[4/5]" : "aspect-[16/9]")}>
-      {image && (
-        <Image
-          src={imageUrl(image)}
-          alt=""
-          fill
-          sizes="320px"
-          className="object-cover transition-transform duration-700 ease-soft group-hover:scale-105"
-        />
-      )}
+    <Link href={href} className={cn("group relative block overflow-hidden rounded-2xl", tone === "pink" ? "bg-pink" : "bg-blue", compact ? "aspect-[4/5]" : "aspect-[16/9]")}>
+      {image && <Image src={imageUrl(image)} alt="" fill sizes="320px" className="object-cover transition-transform duration-700 ease-soft group-hover:scale-105" />}
       <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-ink/10 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-3.5 text-white">
-        <p className="font-display text-[15px] font-semibold leading-tight">{title}</p>
+        <p className="display-caps text-[15px]">{title}</p>
         <p className="text-[11px] opacity-85">{hint}</p>
       </div>
     </Link>
@@ -364,11 +318,9 @@ function AgeTile({ href, image, title, hint, compact }: { href: string; image: s
 function GenderTile({ href, image, title }: { href: string; image: string; title: string }) {
   return (
     <Link href={href} className="group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-sand">
-      {image && (
-        <Image src={imageUrl(image)} alt="" fill sizes="200px" className="object-cover transition-transform duration-700 ease-soft group-hover:scale-105" />
-      )}
+      {image && <Image src={imageUrl(image)} alt="" fill sizes="200px" className="object-cover transition-transform duration-700 ease-soft group-hover:scale-105" />}
       <div className="absolute inset-0 bg-gradient-to-t from-ink/60 to-transparent" />
-      <p className="absolute inset-x-0 bottom-0 p-3.5 font-display text-[15px] font-semibold text-white">{title}</p>
+      <p className="display-caps absolute inset-x-0 bottom-0 p-3.5 text-[14px] text-white">{title}</p>
     </Link>
   );
 }

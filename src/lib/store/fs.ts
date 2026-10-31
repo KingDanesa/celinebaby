@@ -112,6 +112,18 @@ export const fsStore: Store = {
     return orders.find((o) => o.id === id) ?? null;
   },
 
+  async getOrderByInvoice(invoiceId) {
+    const orders = await readJson<Order[]>(ORDERS, []);
+    return orders.find((o) => o.invoiceId === invoiceId) ?? null;
+  },
+
+  async listOrdersForUser(userId, email) {
+    const orders = await readJson<Order[]>(ORDERS, []);
+    return orders
+      .filter((o) => (userId && o.userId === userId) || (email && o.customer.email?.toLowerCase() === email.toLowerCase()))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
   async saveOrder(order) {
     return locked(async () => {
       const orders = await readJson<Order[]>(ORDERS, []);

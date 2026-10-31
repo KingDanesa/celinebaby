@@ -56,6 +56,7 @@ export interface ProductInput {
   care?: string;
   lining?: string;
   tags: ("new" | "hit" | "sale")[];
+  showInNew: boolean;
   inStock: boolean;
   status: "active" | "draft";
 }
@@ -121,7 +122,8 @@ export async function saveProductAction(payload: string): Promise<SaveResult> {
     composition: (input.composition ?? "").trim() || null,
     care: (input.care ?? "").trim() || null,
     lining: (input.lining ?? "").trim() || null,
-    tags: (input.tags ?? []).filter((t) => t === "new" || t === "hit" || t === "sale"),
+    tags: (input.tags ?? []).filter((t) => t === "hit" || t === "sale"),
+    showInNew: !!input.showInNew,
     inStock: !!input.inStock,
     status: input.status === "draft" ? "draft" : "active",
     sourceUrl: existing?.sourceUrl,

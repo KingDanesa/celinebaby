@@ -25,11 +25,14 @@ export interface Product {
   composition: string | null;
   care: string | null;
   lining: string | null;
+  /** "hit" and "sale" are editorial labels; "new" is legacy and migrated to `showInNew`. */
   tags: ("new" | "hit" | "sale")[];
   inStock: boolean;
   sourceUrl?: string;
   /** Drafts are hidden from the public site. */
   status?: "active" | "draft";
+  /** Checkbox in admin: show in the "Новинки" slider on the home page. */
+  showInNew?: boolean;
   nameKk?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -55,4 +58,14 @@ export interface BlogPost {
   image: string;
   readMinutes: number;
   html: string;
+}
+
+export interface SiteUser {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  city?: string;
+  address?: string;
+  createdAt?: string;
 }

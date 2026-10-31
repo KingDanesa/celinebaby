@@ -98,6 +98,22 @@ export const supabaseStore: Store = {
     return (data?.data as Order) ?? null;
   },
 
+  async getOrderByInvoice(invoiceId) {
+    const { data, error } = await sb().from("orders").select("data").eq("data->>invoiceId", invoiceId).maybeSingle();
+    fail("getOrderByInvoice", error);
+    return (data?.data as Order) ?? null;
+  },
+
+  async listOrdersForUser(userId, email) {
+    const parts: string[] = [];
+    if (userId) parts.push(`data->>userId.eq.${userId}`);
+    if (email) parts.push(`data->customer->>email.ilike.${email}`);
+    if (!parts.length) return [];
+    const { data, error } = await sb().from("orders").select("data").or(parts.join(",")).order("created_at", { ascending: false });
+    fail("listOrdersForUser", error);
+    return (data ?? []).map((r) => r.data as Order);
+  },
+
   async saveOrder(order) {
     const { error } = await sb()
       .from("orders")

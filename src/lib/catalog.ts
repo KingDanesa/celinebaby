@@ -15,6 +15,10 @@ import {
 
 export interface CatalogQuery {
   category?: string;
+  /** Several categories at once (home page tiles such as "Кардиганы // Костюмы"). */
+  categories?: string[];
+  /** Only products flagged "В новинки" in admin. */
+  onlyNew?: boolean;
   gender?: Gender;
   age?: AgeGroup;
   sizes?: string[];
@@ -48,8 +52,9 @@ export function parseQuery(
   if (g === "girl" || g === "boy" || g === "unisex") q.gender = g;
   const a = one("age");
   if (a === "newborn" || a === "toddler") q.age = a;
-  const c = one("category");
-  if (c && isCategorySlug(c)) q.category = c;
+  const cats = many("category").filter(isCategorySlug);
+  if (cats.length === 1) q.category = cats[0];
+  else if (cats.length > 1) q.categories = cats;
   const t = one("tag");
   if (t === "new" || t === "hit" || t === "sale") q.tag = t;
   const sizes = many("size");
@@ -74,6 +79,8 @@ function colorKey(name: string) {
 export function filterProducts(products: Product[], q: CatalogQuery): Product[] {
   let list = products;
   if (q.category) list = list.filter((p) => p.category === q.category);
+  if (q.categories?.length) list = list.filter((p) => q.categories!.includes(p.category));
+  if (q.onlyNew) list = list.filter((p) => p.showInNew);
   if (q.gender) {
     list = list.filter((p) =>
       q.gender === "unisex" ? p.gender === "unisex" : p.gender === q.gender || p.gender === "unisex",
@@ -105,11 +112,11 @@ export function filterProducts(products: Product[], q: CatalogQuery): Product[] 
       sorted.sort((a, b) => b.price - a.price);
       break;
     case "new":
-      sorted.sort((a, b) => b.id - a.id);
+      sorted.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "") || b.id - a.id);
       break;
     default: {
       const score = (p: Product) =>
-        (p.tags.includes("hit") ? 100 : 0) + (p.tags.includes("new") ? 20 : 0) + (p.images.length > 2 ? 5 : 0);
+        (p.tags.includes("hit") ? 100 : 0) + (p.showInNew ? 20 : 0) + (p.images.length > 2 ? 5 : 0);
       sorted.sort((a, b) => score(b) - score(a) || b.id - a.id);
     }
   }
@@ -145,7 +152,7 @@ export interface Facets {
 /** Facets are computed over the base scope (category/preset/search) so that
  *  users still see all the options while narrowing down. */
 export function computeFacets(products: Product[], q: CatalogQuery): Facets {
-  const base = filterProducts(products, { category: q.category, tag: q.tag, q: q.q, gender: q.gender, age: q.age });
+  const base = filterProducts(products, { category: q.category, categories: q.categories, onlyNew: q.onlyNew, tag: q.tag, q: q.q, gender: q.gender, age: q.age });
   const sizeCount = new Map<string, number>();
   const colorCount = new Map<string, { hex: string; count: number }>();
   const catCount = new Map<string, number>();
@@ -206,8 +213,12 @@ export function getHits(products: Product[]): Product[] {
   return products.filter((p) => p.tags.includes("hit"));
 }
 
-export function getNewArrivals(products: Product[], n = 12): Product[] {
-  return [...products].sort((a, b) => b.id - a.id).slice(0, n);
+/** Products flagged "В новинки" in admin, most recently updated first. */
+export function getNewArrivals(products: Product[], n = 10): Product[] {
+  return products
+    .filter((p) => p.showInNew)
+    .sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "") || b.id - a.id)
+    .slice(0, n);
 }
 
 export function slugify(input: string): string {
