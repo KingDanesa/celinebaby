@@ -136,6 +136,9 @@
   .tone-blue { @apply bg-blue-soft; }
 }
 
+/* Pages whose last block is a full-bleed colour band sit flush against the footer. */
+main:has(> .flush-footer) + footer { margin-top: 0; }
+
 /* ---------- scroll reveal ---------- */
 .js .reveal {
   opacity: 0;

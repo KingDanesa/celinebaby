@@ -16,7 +16,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const fresh = getNewArrivals(products, NEW_SLIDER_LIMIT);
 
   return (
-    <>
+    <div className="flush-footer">
       {/* Desktop order follows the desktop layout; on phones blocks are reordered like the mobile layout. */}
       <div className="flex flex-col sm:grid sm:grid-cols-2">
         <HeroTiles t={t} href={href} />
@@ -34,6 +34,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </div>
       <Benefits t={t} />
       <BlogTeasers t={t} href={href} posts={blogPosts} />
-    </>
+    </div>
   );
 }

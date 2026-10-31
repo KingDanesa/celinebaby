@@ -5,7 +5,6 @@ import type { Dictionary } from "@/i18n";
 import type { BlogPost } from "@/lib/types";
 import { imageUrl, cn } from "@/lib/format";
 import { homeTiles, STORE } from "@/data/categories";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Monogram } from "@/components/ui/Logo";
 import { Reveal } from "@/components/ui/Reveal";
 import { Parallax } from "@/components/ui/Parallax";
@@ -95,27 +94,36 @@ export function Benefits({ t }: { t: Dictionary }) {
   );
 }
 
+/** Blog as a pastel band: cream background, sharp photo blocks, caps titles — same language as the tiles above. */
 export function BlogTeasers({ t, href, posts }: { t: Dictionary; href: H; posts: BlogPost[] }) {
   return (
-    <section className="container-x mt-16 sm:mt-24">
-      <Reveal>
-        <SectionHeading title={t.home.blogTitle} subtitle={t.home.blogSubtitle} href={href("/blog")} linkLabel={t.home.seeAll} />
-      </Reveal>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.slice(0, 3).map((p, i) => (
-          <Reveal key={p.slug} delay={i * 100}>
-            <Link href={href(`/blog/${p.slug}`)} className="group block">
-              <div className={cn("relative aspect-[4/3] overflow-hidden rounded-2xl", i % 2 ? "bg-blue-soft" : "bg-pink-soft")}>
-                <Image src={imageUrl(p.image)} alt="" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-cover transition-transform duration-700 ease-soft group-hover:scale-105" />
-              </div>
-              <p className="mt-4 text-[12px] text-muted">
-                {new Date(p.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })} · {p.readMinutes} {t.pages.blog.minutes}
-              </p>
-              <h3 className="mt-1.5 text-[17px] font-semibold leading-snug group-hover:text-rose-700">{p.title}</h3>
-              <p className="mt-2 line-clamp-2 text-[14px] text-muted">{p.excerpt}</p>
-            </Link>
-          </Reveal>
-        ))}
+    <section className="bg-cream">
+      <div className="container-x py-14 sm:py-20">
+        <Reveal className="mb-8 flex items-end justify-between sm:mb-10">
+          <div>
+            <p className="eyebrow mb-2">{t.home.blogSubtitle}</p>
+            <h2 className="display-caps text-[28px] sm:text-[36px]">{t.home.blogTitle}</h2>
+          </div>
+          <Link href={href("/blog")} className="link-underline text-[11px] font-semibold uppercase tracking-[0.14em]">
+            {t.home.seeAll}
+          </Link>
+        </Reveal>
+        <div className="grid gap-5 sm:grid-cols-3 sm:gap-6">
+          {posts.slice(0, 3).map((p, i) => (
+            <Reveal key={p.slug} delay={i * 100}>
+              <Link href={href(`/blog/${p.slug}`)} className="group block">
+                <div className="relative aspect-[4/3] overflow-hidden bg-pink-soft sm:aspect-[4/5]">
+                  <Image src={imageUrl(p.image)} alt="" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-cover transition-transform duration-[1200ms] ease-soft group-hover:scale-[1.04]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-6">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">{p.readMinutes} {t.pages.blog.minutes}</p>
+                    <h3 className="mt-2 text-[15px] font-semibold uppercase leading-snug tracking-[0.06em] [text-shadow:0_2px_16px_rgba(43,14,20,0.4)] sm:text-[16px]">{p.title}</h3>
+                  </div>
+                </div>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   );
