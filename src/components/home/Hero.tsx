@@ -13,7 +13,7 @@ export function HeroTiles({ t, href }: { t: Dictionary; href: H }) {
       <Link href={href("/catalog/newborn")} className={`${tile} bg-pink-deep`}>
         <Parallax strength={0.07}>
           <video
-            className="absolute inset-0 h-full w-full object-cover object-[center_18%] opacity-95"
+            className="absolute inset-0 h-full w-full object-cover object-[center_12%]"
             autoPlay
             muted
             loop
@@ -24,8 +24,8 @@ export function HeroTiles({ t, href }: { t: Dictionary; href: H }) {
             <source src="/video/babies.mp4" type="video/mp4" />
           </video>
         </Parallax>
-        <div className="absolute inset-0 bg-pink-deep/35 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-pink-deep/15 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/40 via-ink/5 to-transparent" />
         <TileText title={t.home.newbornTitle} sub={t.home.newbornSub} delay={0} />
       </Link>
       <Link href={href("/catalog/toddler")} className={`${tile} bg-blue`}>
