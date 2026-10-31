@@ -29,6 +29,7 @@ export function ProductCard({
   const { t, href } = useI18n();
   const { toggleWishlist, inWishlist, hydrated } = useCart();
   const [hover, setHover] = useState(false);
+  const [pop, setPop] = useState(false);
   const wished = hydrated && inWishlist(product.id);
   const second = product.images[1];
   const sizes = sortSizes(product.sizes);
@@ -89,13 +90,17 @@ export function ProductCard({
         type="button"
         aria-label={wished ? t.product.inWishlist : t.product.wishlist}
         aria-pressed={wished}
-        onClick={() => toggleWishlist(product.id)}
+        onClick={() => {
+          toggleWishlist(product.id);
+          setPop(true);
+          setTimeout(() => setPop(false), 400);
+        }}
         className={cn(
           "absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur transition hover:bg-white",
           wished ? "text-rose-600" : "text-ink/70",
         )}
       >
-        <Heart className={cn("h-[18px] w-[18px]", wished && "fill-current")} />
+        <Heart className={cn("h-[18px] w-[18px]", wished && "fill-current", pop && "animate-heart")} />
       </button>
       <div className="mt-3 flex flex-col gap-1 px-0.5">
         <Link href={href(`/product/${product.slug}`)} className="line-clamp-2 text-[14px] leading-snug text-ink hover:text-rose-700">

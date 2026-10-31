@@ -20,6 +20,26 @@ export function Header({ menu, userName }: { menu: MenuData; userName: string | 
   const [mega, setMega] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [search, setSearch] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [bump, setBump] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Bounce the bag icon whenever something is added to the cart.
+  const [prevCount, setPrevCount] = useState(count);
+  if (count !== prevCount) {
+    setPrevCount(count);
+    if (count > prevCount) setBump(true);
+  }
+  useEffect(() => {
+    if (!bump) return;
+    const id = setTimeout(() => setBump(false), 500);
+    return () => clearTimeout(id);
+  }, [bump]);
 
   const [lastPath, setLastPath] = useState(pathname);
   if (pathname !== lastPath) {
@@ -65,8 +85,14 @@ export function Header({ menu, userName }: { menu: MenuData; userName: string | 
         </div>
       </div>
 
-      <header className="sticky top-0 z-40 bg-burgundy text-white shadow-[0_8px_24px_-16px_rgba(43,14,20,0.6)]" onMouseLeave={() => setMega(false)}>
-        <div className="container-x flex h-[64px] items-center justify-between gap-6 lg:h-[72px]">
+      <header
+        className={cn(
+          "sticky top-0 z-40 bg-burgundy text-white transition-shadow duration-500",
+          scrolled ? "shadow-[0_12px_32px_-12px_rgba(43,14,20,0.55)]" : "shadow-none",
+        )}
+        onMouseLeave={() => setMega(false)}
+      >
+        <div className={cn("container-x flex items-center justify-between gap-6 transition-[height] duration-500 ease-soft", scrolled ? "h-[56px] lg:h-[60px]" : "h-[64px] lg:h-[72px]")}>
           <div className="flex items-center gap-1 lg:hidden">
             <button type="button" aria-label={t.nav.menu} onClick={() => setMobile(true)} className="-ml-2 p-2">
               <Menu className="h-6 w-6" />
@@ -130,7 +156,7 @@ export function Header({ menu, userName }: { menu: MenuData; userName: string | 
               {userName && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-rose-400" />}
             </Link>
             <button type="button" aria-label={t.nav.cart} onClick={open} className={iconBtn}>
-              <ShoppingBag className="h-[20px] w-[20px]" />
+              <ShoppingBag className={cn("h-[20px] w-[20px]", bump && "animate-bump")} />
               {cartCount > 0 && <Badge>{cartCount}</Badge>}
             </button>
           </div>

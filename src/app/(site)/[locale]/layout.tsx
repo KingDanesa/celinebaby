@@ -55,8 +55,10 @@ export default async function RootLayout({
   const menu = getMenuData(products);
 
   return (
-    <html lang={locale} className={`${comfortaa.variable} ${manrope.variable} h-full`}>
+    <html lang={locale} className={`${comfortaa.variable} ${manrope.variable} h-full`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
+        {/* Marks that JS runs, so scroll-reveal hides nothing when it does not. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
         <I18nProvider locale={locale as Locale} dict={dict}>
           <CartProvider>
             <Header menu={menu} userName={user?.name ?? null} />

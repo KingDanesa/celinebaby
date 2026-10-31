@@ -1,5 +1,6 @@
 import type { Product } from "@/lib/types";
 import { ProductCard } from "./ProductCard";
+import { Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/format";
 
 export function ProductGrid({
@@ -22,7 +23,9 @@ export function ProductGrid({
       )}
     >
       {products.map((p, i) => (
-        <ProductCard key={p.id} product={p} priority={i < priorityCount} tone={(i + Math.floor(i / 2)) % 2 ? "blue" : "pink"} />
+        <Reveal key={p.id} delay={(i % cols) * 70}>
+          <ProductCard product={p} priority={i < priorityCount} tone={(i + Math.floor(i / 2)) % 2 ? "blue" : "pink"} />
+        </Reveal>
       ))}
     </div>
   );

@@ -136,6 +136,55 @@
   .tone-blue { @apply bg-blue-soft; }
 }
 
+/* ---------- scroll reveal ---------- */
+.js .reveal {
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-soft), transform 0.9s var(--ease-soft);
+  will-change: opacity, transform;
+}
+.js .reveal-up { transform: translateY(28px); }
+.js .reveal-scale { transform: scale(0.97); }
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------- hero title ---------- */
+@keyframes title-in {
+  from { opacity: 0; letter-spacing: 0.28em; transform: translateY(14px); }
+  to { opacity: 1; letter-spacing: 0.04em; transform: translateY(0); }
+}
+.title-in { animation: title-in 1.3s var(--ease-soft) both; }
+@media (prefers-reduced-motion: reduce) {
+  .title-in, .animate-fade-up, .animate-fade-in { animation: none; }
+}
+
+/* ---------- micro ---------- */
+@keyframes bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.28); }
+  70% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+.animate-bump { animation: bump 0.45s var(--ease-soft); }
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.animate-heart { animation: heart-pop 0.35s var(--ease-soft); }
+
+/* slider: soften the edges on wide screens */
+@media (min-width: 640px) {
+  .slider-fade {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 2%, #000 98%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 2%, #000 98%, transparent);
+  }
+}
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }

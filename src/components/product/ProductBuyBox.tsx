@@ -18,6 +18,7 @@ export function ProductBuyBox({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [error, setError] = useState(false);
   const [added, setAdded] = useState(false);
+  const [pop, setPop] = useState(false);
   const wished = hydrated && inWishlist(product.id);
 
   const submit = () => {
@@ -106,12 +107,16 @@ export function ProductBuyBox({ product }: { product: Product }) {
         </button>
         <button
           type="button"
-          onClick={() => toggleWishlist(product.id)}
+          onClick={() => {
+            toggleWishlist(product.id);
+            setPop(true);
+            setTimeout(() => setPop(false), 400);
+          }}
           aria-pressed={wished}
           className={cn("btn-outline h-12 px-4", wished && "border-rose-600 text-rose-700")}
           aria-label={t.product.wishlist}
         >
-          <Heart className={cn("h-4 w-4", wished && "fill-current")} />
+          <Heart className={cn("h-4 w-4", wished && "fill-current", pop && "animate-heart")} />
           <span className="sm:hidden">{wished ? t.product.inWishlist : t.product.wishlist}</span>
         </button>
       </div>
