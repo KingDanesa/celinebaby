@@ -80,3 +80,19 @@ create table if not exists admin_password_resets (
   expires_at  timestamptz not null,
   used_at     timestamptz
 );
+
+-- Blog articles written in the admin (text in the simple format of src/lib/blog-format.ts).
+create table if not exists blog_posts (
+  slug        text primary key,
+  status      text not null default 'published',
+  date        date not null default current_date,
+  data        jsonb not null,
+  updated_at  timestamptz not null default now()
+);
+create index if not exists blog_posts_date_idx on blog_posts (date desc);
+
+-- One-off flags, e.g. that the first blog articles were copied in.
+create table if not exists app_meta (
+  key    text primary key,
+  value  text not null
+);

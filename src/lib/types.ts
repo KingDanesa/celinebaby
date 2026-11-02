@@ -50,6 +50,7 @@ export interface CartItem {
   qty: number;
 }
 
+/** An article as shown on the site (already in the visitor's language). */
 export interface BlogPost {
   slug: string;
   title: string;
@@ -58,6 +59,21 @@ export interface BlogPost {
   image: string;
   readMinutes: number;
   html: string;
+}
+
+/** An article as stored and edited in the admin. */
+export interface BlogRecord {
+  slug: string;
+  status: "published" | "draft";
+  date: string;
+  image: string;
+  title: string;
+  excerpt: string;
+  body: string;
+  titleKk?: string;
+  excerptKk?: string;
+  bodyKk?: string;
+  updatedAt?: string;
 }
 
 export interface SiteUser {

@@ -4,28 +4,29 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageContext } from "@/lib/page";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { blogPosts, getPost } from "@/data/blog";
+import { findPost, loadPosts } from "@/lib/blog";
 import { imageUrl } from "@/lib/format";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  return { title: getPost(slug)?.title ?? "Blog" };
+  const { slug, locale } = await params;
+  const post = await findPost(decodeURIComponent(slug), locale);
+  return post ? { title: post.title, description: post.excerpt, openGraph: { images: [post.image] } } : { title: "Blog" };
 }
 
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
-  const { t, href } = await pageContext(params);
-  const post = getPost(slug);
+  const { t, href, locale } = await pageContext(params);
+  const post = await findPost(decodeURIComponent(slug), locale);
   if (!post) notFound();
-  const others = blogPosts.filter((p) => p.slug !== slug).slice(0, 3);
+  const others = (await loadPosts(locale)).filter((p) => p.slug !== post.slug).slice(0, 3);
   return (
     <article className="container-x pt-5 sm:pt-8">
       <Breadcrumbs items={[{ label: t.catalog.breadcrumbHome, href: href("/") }, { label: t.pages.blog.title, href: href("/blog") }, { label: post.title }]} />
       <header className="mx-auto mt-8 max-w-3xl text-center">
         <p className="text-[12px] text-muted">
-          {new Date(post.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })} · {post.readMinutes} {t.pages.blog.minutes}
+          {new Date(post.date).toLocaleDateString(locale === "kk" ? "kk-KZ" : "ru-RU", { day: "numeric", month: "long", year: "numeric" })} · {post.readMinutes} {t.pages.blog.minutes}
         </p>
         <h1 className="mt-3 text-[30px] leading-tight font-semibold sm:text-[42px]">{post.title}</h1>
         <p className="mt-4 text-[16px] text-ink-soft">{post.excerpt}</p>

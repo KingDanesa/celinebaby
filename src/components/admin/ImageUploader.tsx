@@ -26,6 +26,19 @@ async function shrink(file: File): Promise<{ blob: Blob; width: number }> {
   );
 }
 
+/** Shrinks a photo in the browser and uploads it; returns its URL and the original width. */
+export async function uploadImageFile(file: File): Promise<{ url: string; width: number }> {
+  const { blob, width } = await shrink(file);
+  const fd = new FormData();
+  fd.append("file", new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }));
+  const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+  if (!res.ok) throw new Error(await res.text());
+  const { url } = (await res.json()) as { url: string };
+  return { url, width };
+}
+
+export { MIN_GOOD_WIDTH };
+
 export function ImageUploader({ images, onChange }: { images: string[]; onChange: (next: string[]) => void }) {
   const [busy, setBusy] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -42,13 +55,8 @@ export function ImageUploader({ images, onChange }: { images: string[]; onChange
     const added: string[] = [];
     for (const file of list) {
       try {
-        const { blob, width } = await shrink(file);
+        const { url, width } = await uploadImageFile(file);
         if (width < MIN_GOOD_WIDTH) tooSmall.push(`${file.name} (${width} px)`);
-        const fd = new FormData();
-        fd.append("file", new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }));
-        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-        if (!res.ok) throw new Error(await res.text());
-        const { url } = (await res.json()) as { url: string };
         added.push(url);
       } catch (e) {
         setError(`Не удалось загрузить ${file.name}`);

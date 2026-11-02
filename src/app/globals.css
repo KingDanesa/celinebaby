@@ -131,6 +131,10 @@
     @apply mt-6 mb-2 text-lg font-semibold text-ink;
   }
   .prose-soft strong { @apply text-ink; }
+  .prose-soft a { @apply text-rose-700 underline underline-offset-2 hover:text-rose-900; }
+  .prose-soft figure { @apply my-8; }
+  .prose-soft figure img { @apply w-full rounded-3xl bg-sand object-cover; }
+  .prose-soft figcaption { @apply mt-3 text-center text-[13px] text-muted; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .watercolor-fade {

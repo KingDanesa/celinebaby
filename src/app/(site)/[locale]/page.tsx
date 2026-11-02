@@ -3,7 +3,7 @@ import { isLocale, type Locale } from "@/i18n/config";
 import { loadProducts } from "@/lib/products";
 import { getNewArrivals } from "@/lib/catalog";
 import { NEW_SLIDER_LIMIT } from "@/data/categories";
-import { blogPosts } from "@/data/blog";
+import { loadPosts } from "@/lib/blog";
 import { HeroTiles } from "@/components/home/Hero";
 import { Benefits, BlogTeasers, CategoryTiles, DischargeTile, StoreTile } from "@/components/home/Sections";
 import { NewSlider } from "@/components/home/NewSlider";
@@ -14,6 +14,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const href = (p: string) => `/${locale}${p}`;
   const products = await loadProducts();
   const fresh = getNewArrivals(products, NEW_SLIDER_LIMIT);
+  const posts = await loadPosts(locale);
 
   return (
     <div className="flush-footer">
@@ -33,7 +34,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </div>
       <Benefits t={t} />
-      <BlogTeasers t={t} href={href} posts={blogPosts} />
+      {posts.length > 0 && <BlogTeasers t={t} href={href} posts={posts} />}
     </div>
   );
 }

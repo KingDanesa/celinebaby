@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/site";
 import { loadProducts } from "@/lib/products";
 import { categories, presetRoutes } from "@/data/categories";
-import { blogPosts } from "@/data/blog";
+import { loadPosts } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
   const presets = Object.keys(presetRoutes).map((s) => entry(`/catalog/${s}`, 0.8));
   const cats = categories.map((c) => entry(`/catalog/${c.slug}`, 0.8));
-  const posts = blogPosts.map((p) => entry(`/blog/${p.slug}`, 0.4));
+  const posts = (await loadPosts("ru")).map((p) => entry(`/blog/${p.slug}`, 0.4));
   const products = (await loadProducts()).map((p) => entry(`/product/${p.slug}`, 0.7, p.updatedAt ?? p.createdAt));
   return [...pages, ...presets, ...cats, ...posts, ...products];
 }
