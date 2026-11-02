@@ -4,8 +4,6 @@ import { pageContext } from "@/lib/page";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Benefits } from "@/components/home/Sections";
 import { Monogram } from "@/components/ui/Logo";
-import { loadProducts } from "@/lib/products";
-import { imageUrl } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { t } = await pageContext(params);
@@ -15,16 +13,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
   const { t, href } = await pageContext(params);
   const a = t.pages.about;
-  const gallery = (await loadProducts()).filter((p) => p.images.length > 3 && p.tags.includes("hit")).slice(0, 3);
+  // Photos of the shop in Astana: the hall, the entrance (raised in the middle) and the house-shaped shelves.
+  const gallery = ["/img/about-1.jpg", "/img/about-2.jpg", "/img/about-3.jpg"];
 
   return (
     <>
       <PageHeader eyebrow={a.eyebrow} title={a.title} lead={a.lead} crumbs={[{ label: t.catalog.breadcrumbHome, href: href("/") }, { label: a.title }]} />
 
       <div className="container-x mt-12 grid gap-4 sm:grid-cols-3">
-        {gallery.map((p, i) => (
-          <div key={p.id} className={`relative overflow-hidden rounded-3xl bg-sand ${i === 1 ? "aspect-[4/5] sm:-mt-8" : "aspect-[4/5]"}`}>
-            <Image src={imageUrl(p.images[i % p.images.length])} alt="" fill sizes="33vw" className="object-cover" />
+        {gallery.map((src, i) => (
+          <div key={src} className={`relative aspect-[3/4] overflow-hidden rounded-3xl bg-sand ${i === 1 ? "sm:-mt-8" : ""}`}>
+            <Image src={src} alt={`${a.visit}, Celine Baby`} fill priority={i === 0} sizes="(max-width: 640px) 100vw, 33vw" className="object-cover object-[center_40%]" />
           </div>
         ))}
       </div>
