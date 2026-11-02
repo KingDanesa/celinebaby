@@ -44,7 +44,10 @@ next-env.d.ts
 /data/products.json
 /data/orders.json
 /public/uploads
+/media
+/deploy/local/
 !.env.example
 
 .vercel
 .env*
+__pycache__/

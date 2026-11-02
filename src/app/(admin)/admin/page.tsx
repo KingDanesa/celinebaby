@@ -7,6 +7,8 @@ import { getStore } from "@/lib/store";
 import { Badge, Card, PageTitle, Stat } from "@/components/admin/ui";
 import { formatPrice, imageUrl } from "@/lib/format";
 import ru from "@/i18n/ru";
+import { halykConfig, halykEnabled } from "@/lib/payment/halyk";
+import { emailMode } from "@/lib/email";
 
 export default async function AdminHome() {
   await requireAdmin();
@@ -21,7 +23,7 @@ export default async function AdminHome() {
     <>
       <PageTitle
         title="Обзор"
-        subtitle={`Хранилище: ${store.name === "fs" ? "локальные файлы" : "Supabase"}`}
+        subtitle={systemLine(store.name)}
         action={
           <Link href="/admin/products/new" className="btn-primary">
             <Plus className="h-4 w-4" /> Добавить товар
@@ -82,4 +84,11 @@ export default async function AdminHome() {
       </div>
     </>
   );
+}
+
+function systemLine(storeName: string): string {
+  const db = storeName === "pg" ? "своя база" : storeName === "supabase" ? "Supabase (демо)" : "локальные файлы";
+  const pay = !halykEnabled() ? "онлайн-оплата выключена" : halykConfig().test ? "оплата: ТЕСТОВЫЙ режим" : "оплата: боевой режим";
+  const mail = { smtp: "письма: почта (SMTP)", resend: "письма: Resend", log: "письма НЕ отправляются" }[emailMode()];
+  return `${db} · ${pay} · ${mail}`;
 }

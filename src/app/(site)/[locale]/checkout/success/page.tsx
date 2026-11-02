@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Check, Clock, XCircle } from "lucide-react";
 import { pageContext } from "@/lib/page";
 import { getStore } from "@/lib/store";
-import { syncPaymentStatus } from "@/lib/actions/orders";
+import { syncPayment } from "@/lib/payment/service";
 import { Monogram } from "@/components/ui/Logo";
 import { formatPrice } from "@/lib/format";
 
@@ -20,10 +20,11 @@ export default async function SuccessPage({
   const store = await getStore();
   let order = id ? await store.getOrder(id) : null;
   if (order && order.payment === "halyk" && order.paymentStatus !== "paid") {
-    order = (await syncPaymentStatus(order.id)) ?? order;
+    order = (await syncPayment(order.id)) ?? order;
   }
 
-  const state = !order ? "kaspi" : order.payment !== "halyk" ? "kaspi" : order.paymentStatus === "paid" ? "paid" : order.paymentStatus === "failed" ? "failed" : "pending";
+  const ps = order?.paymentStatus;
+  const state = !order || order.payment !== "halyk" ? "kaspi" : ps === "paid" ? "paid" : ps === "failed" || ps === "unpaid" ? "failed" : "pending";
   const text = { paid: t.checkout.successPaid, pending: t.checkout.successPending, kaspi: t.checkout.successKaspi, failed: t.checkout.successFailed }[state];
   const Icon = state === "failed" ? XCircle : state === "pending" ? Clock : Check;
   const tone = state === "failed" ? "bg-rose-700" : state === "pending" ? "bg-ink" : "bg-burgundy";

@@ -1,0 +1,9 @@
+[Unit]
+Description=Every 10 minutes: re-check unfinished Halyk payments
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target

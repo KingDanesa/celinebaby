@@ -6,12 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/db-migrate.mjs",
+    "export:supabase": "node --env-file-if-exists=.env.local scripts/export-supabase.mjs",
+    "import:bundle": "node --env-file-if-exists=.env.local scripts/import-bundle.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.64.0",
     "next": "16.4.3",
+    "nodemailer": "^10.3.1",
+    "postgres": "^4.0.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "resend": "^6.37.0",
@@ -20,6 +25,7 @@
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

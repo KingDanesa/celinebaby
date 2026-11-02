@@ -101,7 +101,10 @@ export const supabaseStore: Store = {
   async getOrderByInvoice(invoiceId) {
     const { data, error } = await sb().from("orders").select("data").eq("data->>invoiceId", invoiceId).maybeSingle();
     fail("getOrderByInvoice", error);
-    return (data?.data as Order) ?? null;
+    if (data?.data) return data.data as Order;
+    // An earlier attempt of the same order: the demo has few orders, so a scan is fine.
+    const all = await supabaseStore.listOrders();
+    return all.find((o) => o.payments?.some((p) => p.invoiceId === invoiceId)) ?? null;
   },
 
   async listOrdersForUser(userId, email) {
@@ -114,11 +117,19 @@ export const supabaseStore: Store = {
     return (data ?? []).map((r) => r.data as Order);
   },
 
-  async saveOrder(order) {
-    const { error } = await sb()
-      .from("orders")
-      .upsert({ id: order.id, status: order.status, data: order, created_at: order.createdAt });
-    fail("saveOrder", error);
+  async createOrder(order) {
+    const row = { ...order, version: 0 };
+    const { error } = await sb().from("orders").insert({ id: order.id, status: order.status, data: row, created_at: order.createdAt });
+    fail("createOrder", error);
     return order;
+  },
+
+  async updateOrder(order, expectedVersion) {
+    const row = { ...order, version: expectedVersion + 1 };
+    let q = sb().from("orders").update({ status: order.status, data: row }).eq("id", order.id);
+    q = expectedVersion === 0 ? q.or("data->>version.is.null,data->>version.eq.0") : q.eq("data->>version", String(expectedVersion));
+    const { data, error } = await q.select("id");
+    fail("updateOrder", error);
+    return (data?.length ?? 0) > 0;
   },
 };

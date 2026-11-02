@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { pageContext } from "@/lib/page";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getStore } from "@/lib/store";
-import { syncPaymentStatus } from "@/lib/actions/orders";
+import { syncPayment } from "@/lib/payment/service";
 import { formatPrice, imageUrl } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function AccountOrderPage({ params }: { params: Promise<{ l
   if (!order) notFound();
   const mine = order.userId === user.id || (order.customer.email ?? "").toLowerCase() === user.email.toLowerCase();
   if (!mine) notFound();
-  if (order.payment === "halyk" && order.paymentStatus !== "paid") order = (await syncPaymentStatus(id)) ?? order;
+  if (order.payment === "halyk" && order.paymentStatus !== "paid") order = (await syncPayment(id)) ?? order;
 
   const delivery = t.checkout.deliveryMethods.find((m) => m.id === order.delivery)?.title ?? order.delivery;
   const payment = t.checkout.paymentMethods.find((m) => m.id === order.payment)?.title ?? order.payment;

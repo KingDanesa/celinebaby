@@ -1,0 +1,9 @@
+[Unit]
+Description=Nightly at 04:00: backup of the database and photos
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

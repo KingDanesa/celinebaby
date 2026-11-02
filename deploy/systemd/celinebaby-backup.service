@@ -1,0 +1,8 @@
+[Unit]
+Description=Celine Baby: nightly backup of the database and photos
+
+[Service]
+Type=oneshot
+User=celine
+EnvironmentFile=/etc/celinebaby/env
+ExecStart=/usr/local/bin/celinebaby-backup

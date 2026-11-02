@@ -7,6 +7,7 @@ interface PaymentObject {
   invoiceId: string;
   backLink: string;
   failureBackLink: string;
+  autoBackLink: boolean;
   postLink: string;
   failurePostLink: string;
   language: string;

@@ -1,0 +1,9 @@
+[Unit]
+Description=Celine Baby: re-check unfinished Halyk payments
+After=celinebaby.service
+
+[Service]
+Type=oneshot
+User=celine
+EnvironmentFile=/etc/celinebaby/env
+ExecStart=/bin/sh -c 'curl -fsS -m 120 -X POST -H "x-cron-secret: $CRON_SECRET" http://127.0.0.1:3000/api/payment/halyk/reconcile'

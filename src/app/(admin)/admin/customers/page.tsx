@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/admin/auth";
-import { authClient, authEnabled, toSiteUser } from "@/lib/auth/server";
+import { getAuthBackend } from "@/lib/auth/backend";
 import { getStore } from "@/lib/store";
 import { PageTitle } from "@/components/admin/ui";
 import { formatPrice } from "@/lib/format";
@@ -8,17 +8,18 @@ export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
   await requireAdmin();
-  if (!authEnabled()) {
+  const backend = await getAuthBackend();
+  if (!backend) {
     return (
       <>
         <PageTitle title="Покупатели" />
-        <p className="text-[14px] text-muted">Личные кабинеты работают только с Supabase. Задайте SUPABASE_URL и ключ.</p>
+        <p className="text-[14px] text-muted">Личные кабинеты включаются, когда подключена база данных (DATABASE_URL).</p>
       </>
     );
   }
-  const [{ data }, store] = await Promise.all([authClient().auth.admin.listUsers({ page: 1, perPage: 500 }), getStore()]);
+  const [list, store] = await Promise.all([backend.listUsers(), getStore()]);
   const orders = await store.listOrders();
-  const users = (data?.users ?? []).map(toSiteUser).sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+  const users = list.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
   const stats = new Map<string, { count: number; sum: number }>();
   for (const o of orders) {
     const key = o.userId ?? o.customer.email?.toLowerCase();

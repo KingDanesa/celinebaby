@@ -1,0 +1,23 @@
+[Unit]
+Description=Celine Baby website (Next.js)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=celine
+Group=celine
+WorkingDirectory=/srv/celinebaby
+EnvironmentFile=/etc/celinebaby/env
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=3
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/srv/celinebaby /srv/celinebaby-media
+
+[Install]
+WantedBy=multi-user.target

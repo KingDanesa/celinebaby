@@ -30,7 +30,7 @@ export function LoginForm({ next }: { next?: string }) {
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="locale" value={locale} />
       {next && <input type="hidden" name="next" value={next} />}
-      <Field label={t.account.email} name="email" type="email" required autoComplete="email" />
+      <Field label={t.account.email} name="email" type="email" required autoComplete="email" defaultValue={state?.values?.email} />
       <Field label={t.account.password} name="password" type="password" required autoComplete="current-password" />
       <ErrorBox state={state} />
       <button type="submit" disabled={pending} className="btn-primary w-full">
@@ -55,9 +55,9 @@ export function RegisterForm({ next }: { next?: string }) {
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="locale" value={locale} />
       {next && <input type="hidden" name="next" value={next} />}
-      <Field label={t.account.name} name="name" required autoComplete="name" />
-      <Field label={t.account.phone} name="phone" type="tel" required autoComplete="tel" placeholder="+7 (___) ___ __ __" />
-      <Field label={t.account.email} name="email" type="email" required autoComplete="email" />
+      <Field label={t.account.name} name="name" required autoComplete="name" defaultValue={state?.values?.name} />
+      <Field label={t.account.phone} name="phone" type="tel" required autoComplete="tel" placeholder="+7 (___) ___ __ __" defaultValue={state?.values?.phone} />
+      <Field label={t.account.email} name="email" type="email" required autoComplete="email" defaultValue={state?.values?.email} />
       <Field label={t.account.password} name="password" type="password" required autoComplete="new-password" hint={t.account.passwordHint} />
       <ErrorBox state={state} />
       <button type="submit" disabled={pending} className="btn-primary w-full">

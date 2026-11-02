@@ -1,6 +1,41 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { locales, defaultLocale } from "@/i18n/config";
+import legacy from "@/data/legacy-redirects.json";
+
+const LEGACY = legacy as {
+  products: Record<string, string>;
+  pages: Record<string, string>;
+  productIds: Record<string, string>;
+  categoryIds: Record<string, string>;
+};
+
+/**
+ * Addresses of the old OpenCart site: /<product>, /<category>/<product>, /<category>,
+ * /index.php?route=product/product&product_id=N, …  → 301 to the matching new page.
+ */
+function legacyTarget(request: NextRequest): string | null {
+  const { pathname, searchParams } = request.nextUrl;
+  const route = searchParams.get("route");
+  if (route || pathname === "/index.php") {
+    if (route === "product/product") return LEGACY.productIds[searchParams.get("product_id") ?? ""] ?? "/catalog";
+    if (route === "product/category") {
+      const last = (searchParams.get("path") ?? "").split("_").pop() ?? "";
+      return LEGACY.categoryIds[last] ?? "/catalog";
+    }
+    if (route?.startsWith("information/") || route?.startsWith("blog/") || route?.startsWith("newsblog/")) return "/";
+    if (route?.startsWith("checkout/cart")) return "/cart";
+    if (route?.startsWith("account/")) return "/account";
+    return "/";
+  }
+  const parts = pathname.split("/").filter(Boolean);
+  if (!parts.length) return null;
+  let last = parts[parts.length - 1];
+  try {
+    last = decodeURIComponent(last);
+  } catch {}
+  return LEGACY.products[last] ?? LEGACY.pages[last] ?? null;
+}
 
 const ACCESS_COOKIE = "cb_at";
 const REFRESH_COOKIE = "cb_rt";
@@ -20,7 +55,8 @@ async function refreshSession(request: NextRequest, response: NextResponse) {
   const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!refresh || !url || !key) return;
+  // Own accounts (DATABASE_URL) use one long session cookie: nothing to refresh.
+  if (!refresh || !url || !key || process.env.DATABASE_URL) return;
   const now = Math.floor(Date.now() / 1000);
   if (access && jwtExp(access) - now > 120) return;
   try {
@@ -48,6 +84,15 @@ export async function proxy(request: NextRequest) {
   if (!hasLocale) {
     const cookie = request.cookies.get("locale")?.value;
     const locale = locales.includes(cookie as (typeof locales)[number]) ? (cookie as (typeof locales)[number]) : defaultLocale;
+    const old = legacyTarget(request);
+    if (old) {
+      const to = request.nextUrl.clone();
+      const [path, hash] = old.split("#");
+      to.pathname = `/${locale}${path === "/" ? "" : path}`;
+      to.search = "";
+      to.hash = hash ? `#${hash}` : "";
+      return NextResponse.redirect(to, 301);
+    }
     request.nextUrl.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
     return NextResponse.redirect(request.nextUrl);
   }
@@ -71,5 +116,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|admin|brand|img|video|uploads|favicon.ico|.*\\..*).*)"],
+  matcher: ["/((?!_next|api|admin|brand|img|video|uploads|image|favicon.ico|.*\\..*).*)", "/index.php"],
 };

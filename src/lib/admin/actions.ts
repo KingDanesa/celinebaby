@@ -4,7 +4,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { SESSION_COOKIE, checkPassword, createSessionValue, requireAdmin } from "./auth";
-import { getStore, type OrderStatus } from "@/lib/store";
+import { getStore, mutateOrder, type OrderStatus } from "@/lib/store";
+import { sendStatusEmail } from "@/lib/email";
+import { clientIp, tooMany } from "@/lib/rate-limit";
+import { siteUrl } from "@/lib/payment/service";
 import { invalidateProducts, loadAllProducts } from "@/lib/products";
 import { slugify } from "@/lib/catalog";
 import { categorySlugs } from "@/data/categories";
@@ -14,6 +17,10 @@ import type { Product } from "@/lib/types";
 
 export async function loginAction(_prev: { error?: string } | undefined, formData: FormData): Promise<{ error?: string }> {
   const password = String(formData.get("password") ?? "");
+  if (tooMany(`admin:${await clientIp()}`, 10, 900)) {
+    await new Promise((r) => setTimeout(r, 400));
+    return { error: "Слишком много попыток. Подождите 15 минут." };
+  }
   if (!checkPassword(password)) {
     await new Promise((r) => setTimeout(r, 400));
     return { error: "Неверный пароль" };
@@ -164,11 +171,12 @@ export async function toggleProductStatusAction(id: number) {
 
 /* ---------------- orders ---------------- */
 
+const ORDER_STATUSES: OrderStatus[] = ["new", "paid", "shipped", "done", "cancelled"];
+
 export async function setOrderStatusAction(id: string, status: OrderStatus) {
   await requireAdmin();
-  const store = await getStore();
-  const o = await store.getOrder(id);
-  if (!o) return;
-  await store.saveOrder({ ...o, status });
+  if (!ORDER_STATUSES.includes(status)) return;
+  const res = await mutateOrder(id, (o) => (o.status === status ? null : { ...o, status }));
+  if (res?.changed) sendStatusEmail(res.after, siteUrl()).catch((e) => console.error("[email]", e));
   revalidatePath("/admin/orders", "layout");
 }

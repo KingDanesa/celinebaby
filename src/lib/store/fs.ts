@@ -1,14 +1,14 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { Product } from "@/lib/types";
-import type { Order, Store } from "./types";
+import { orderVersion, type Order, type Store } from "./types";
+import { deleteUpload, saveUpload } from "@/lib/media";
 
 const ROOT = process.cwd();
 const DATA_DIR = path.join(ROOT, "data");
 const SEED = path.join(DATA_DIR, "seed", "products.json");
 const PRODUCTS = path.join(DATA_DIR, "products.json");
 const ORDERS = path.join(DATA_DIR, "orders.json");
-const UPLOADS = path.join(ROOT, "public", "uploads");
 
 async function exists(p: string) {
   try {
@@ -88,18 +88,11 @@ export const fsStore: Store = {
   },
 
   async uploadImage({ bytes, contentType, name }) {
-    const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
-    const safe = name.replace(/[^a-z0-9_-]/gi, "").slice(0, 32) || "img";
-    const file = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}-${safe}.${ext}`;
-    await fs.mkdir(UPLOADS, { recursive: true });
-    await fs.writeFile(path.join(UPLOADS, file), bytes);
-    return { url: `/uploads/${file}` };
+    return { url: await saveUpload(bytes, contentType, name) };
   },
 
   async deleteImage(url) {
-    if (!url.startsWith("/uploads/")) return;
-    const p = path.join(UPLOADS, path.basename(url));
-    if (await exists(p)) await fs.unlink(p);
+    await deleteUpload(url);
   },
 
   async listOrders() {
@@ -114,7 +107,7 @@ export const fsStore: Store = {
 
   async getOrderByInvoice(invoiceId) {
     const orders = await readJson<Order[]>(ORDERS, []);
-    return orders.find((o) => o.invoiceId === invoiceId) ?? null;
+    return orders.find((o) => o.invoiceId === invoiceId || o.payments?.some((p) => p.invoiceId === invoiceId)) ?? null;
   },
 
   async listOrdersForUser(userId, email) {
@@ -124,14 +117,24 @@ export const fsStore: Store = {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
 
-  async saveOrder(order) {
+  async createOrder(order) {
+    return locked(async () => {
+      const orders = await readJson<Order[]>(ORDERS, []);
+      if (orders.some((o) => o.id === order.id)) throw new Error(`Order ${order.id} already exists`);
+      orders.push({ ...order, version: 0 });
+      await writeJson(ORDERS, orders);
+      return order;
+    });
+  },
+
+  async updateOrder(order, expectedVersion) {
     return locked(async () => {
       const orders = await readJson<Order[]>(ORDERS, []);
       const i = orders.findIndex((o) => o.id === order.id);
-      if (i >= 0) orders[i] = order;
-      else orders.push(order);
+      if (i < 0 || orderVersion(orders[i]) !== expectedVersion) return false;
+      orders[i] = { ...order, version: expectedVersion + 1 };
       await writeJson(ORDERS, orders);
-      return order;
+      return true;
     });
   },
 };
