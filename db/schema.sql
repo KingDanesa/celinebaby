@@ -54,3 +54,29 @@ create table if not exists password_resets (
   expires_at  timestamptz not null,
   used_at     timestamptz
 );
+
+-- Admin panel: each person has their own login; sessions and reset/invite links store only a SHA-256.
+create table if not exists admin_users (
+  id             uuid primary key default gen_random_uuid(),
+  email          text not null unique,
+  name           text not null default '',
+  password_hash  text not null,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  last_login_at  timestamptz
+);
+
+create table if not exists admin_sessions (
+  token_hash  text primary key,
+  admin_id    uuid not null references admin_users(id) on delete cascade,
+  expires_at  timestamptz not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists admin_sessions_admin_idx on admin_sessions (admin_id);
+
+create table if not exists admin_password_resets (
+  token_hash  text primary key,
+  admin_id    uuid not null references admin_users(id) on delete cascade,
+  expires_at  timestamptz not null,
+  used_at     timestamptz
+);

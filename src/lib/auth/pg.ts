@@ -1,7 +1,6 @@
 import "server-only";
-import { createHash, randomBytes, scrypt as scryptCb, timingSafeEqual } from "crypto";
-import { promisify } from "util";
 import { db } from "@/lib/db";
+import { burnPasswordCheck, hashPassword, newToken, sha256, verifyPassword } from "@/lib/password";
 import type { SiteUser } from "@/lib/types";
 import type { AuthBackend, Session } from "./backend";
 
@@ -10,33 +9,8 @@ import type { AuthBackend, Session } from "./backend";
  * Passwords: scrypt with a random salt. Sessions and reset links: random tokens, only their SHA-256 is stored.
  */
 
-const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number, opts: { N: number; r: number; p: number; maxmem: number }) => Promise<Buffer>;
-const N = 16384,
-  R = 8,
-  P = 1,
-  KEYLEN = 64;
 const SESSION_TTL = 60 * 60 * 24 * 60; // 60 days
 const RESET_TTL_MIN = 60;
-
-async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16);
-  const key = await scrypt(password, salt, KEYLEN, { N, r: R, p: P, maxmem: 64 * 1024 * 1024 });
-  return `scrypt$${N}$${R}$${P}$${salt.toString("base64")}$${key.toString("base64")}`;
-}
-
-async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  const [algo, n, r, p, salt, hash] = stored.split("$");
-  if (algo !== "scrypt" || !salt || !hash) return false;
-  const expected = Buffer.from(hash, "base64");
-  const key = await scrypt(password, Buffer.from(salt, "base64"), expected.length, { N: Number(n), r: Number(r), p: Number(p), maxmem: 64 * 1024 * 1024 });
-  return key.length === expected.length && timingSafeEqual(key, expected);
-}
-
-// Same work for unknown e-mails, so response time does not reveal which addresses exist.
-const DUMMY = hashPassword(randomBytes(12).toString("hex"));
-
-const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
-const newToken = () => randomBytes(32).toString("base64url");
 
 type Row = { id: string; email: string; name: string; phone: string; city: string | null; address: string | null; created_at: Date };
 const toUser = (r: Row): SiteUser => ({
@@ -86,7 +60,7 @@ export const pgAuth: AuthBackend = {
   async signIn(email, password) {
     const [row] = await db()`select id, password_hash from users where email = ${email}`;
     if (!row) {
-      await verifyPassword(password, await DUMMY);
+      await burnPasswordCheck(password);
       return null;
     }
     if (!(await verifyPassword(password, row.password_hash as string))) return null;

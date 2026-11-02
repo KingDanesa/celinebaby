@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ExternalLink, LayoutDashboard, LogOut, Menu, Package, ShoppingBag, Tags, Users, X } from "lucide-react";
+import { ExternalLink, KeyRound, LayoutDashboard, LogOut, Menu, Package, ShoppingBag, Tags, Users, X } from "lucide-react";
 import { cn } from "@/lib/format";
-import { logoutAction } from "@/lib/admin/actions";
+import { logoutAction } from "@/lib/admin/access-actions";
 import { Wordmark } from "@/components/ui/Logo";
 
 const nav = [
@@ -14,9 +14,10 @@ const nav = [
   { href: "/admin/orders", label: "Заказы", icon: ShoppingBag },
   { href: "/admin/customers", label: "Покупатели", icon: Users },
   { href: "/admin/categories", label: "Категории", icon: Tags },
+  { href: "/admin/access", label: "Доступ", icon: KeyRound },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ who }: { who: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -44,6 +45,7 @@ export function AdminSidebar() {
 
   const footer = (
     <div className="mt-auto flex flex-col gap-1 border-t border-line pt-4">
+      {who && <p className="truncate px-3 pb-1 text-[12px] text-muted">{who}</p>}
       <a href="/ru" target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] text-ink-soft hover:bg-rose-50">
         <ExternalLink className="h-[18px] w-[18px]" /> Открыть сайт
       </a>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "../../globals.css";
-import { isAdmin } from "@/lib/admin/auth";
+import { currentAdmin } from "@/lib/admin/auth";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 const manrope = Manrope({
@@ -17,13 +17,13 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const authed = await isAdmin();
+  const admin = await currentAdmin();
   return (
     <html lang="ru" className={`${manrope.variable} h-full`}>
       <body className="min-h-full bg-[#f6f3f1] text-ink [--font-comfortaa:var(--font-manrope)]">
-        {authed ? (
+        {admin ? (
           <div className="flex min-h-screen">
-            <AdminSidebar />
+            <AdminSidebar who={admin.email || admin.name} />
             <div className="flex min-w-0 flex-1 flex-col">
               <main className="flex-1 px-5 py-6 lg:px-10 lg:py-8">{children}</main>
             </div>

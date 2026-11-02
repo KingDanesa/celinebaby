@@ -1,46 +1,15 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { SESSION_COOKIE, checkPassword, createSessionValue, requireAdmin } from "./auth";
+import { requireAdmin } from "./auth";
 import { getStore, mutateOrder, type OrderStatus } from "@/lib/store";
 import { sendStatusEmail } from "@/lib/email";
-import { clientIp, tooMany } from "@/lib/rate-limit";
 import { siteUrl } from "@/lib/payment/service";
 import { invalidateProducts, loadAllProducts } from "@/lib/products";
 import { slugify } from "@/lib/catalog";
 import { categorySlugs } from "@/data/categories";
 import type { Product } from "@/lib/types";
-
-/* ---------------- auth ---------------- */
-
-export async function loginAction(_prev: { error?: string } | undefined, formData: FormData): Promise<{ error?: string }> {
-  const password = String(formData.get("password") ?? "");
-  if (tooMany(`admin:${await clientIp()}`, 10, 900)) {
-    await new Promise((r) => setTimeout(r, 400));
-    return { error: "Слишком много попыток. Подождите 15 минут." };
-  }
-  if (!checkPassword(password)) {
-    await new Promise((r) => setTimeout(r, 400));
-    return { error: "Неверный пароль" };
-  }
-  const jar = await cookies();
-  jar.set(SESSION_COOKIE, await createSessionValue(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 14,
-  });
-  redirect("/admin");
-}
-
-export async function logoutAction() {
-  const jar = await cookies();
-  jar.delete(SESSION_COOKIE);
-  redirect("/admin/login");
-}
 
 /* ---------------- products ---------------- */
 

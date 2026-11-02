@@ -242,3 +242,14 @@ export async function sendPasswordResetEmail(to: string, link: string, locale = 
     ),
   );
 }
+
+/** Admin panel: invitation for a new person or a "forgot password" link. */
+export async function sendAdminLinkEmail(to: string, link: string, kind: "invite" | "reset", name = "") {
+  const site = siteUrl();
+  const hello = name ? `${esc(name)}, здравствуйте!` : "Здравствуйте!";
+  const body =
+    kind === "invite"
+      ? `<p>${hello}</p><p>Вас добавили в админку сайта Celine Baby. Нажмите кнопку и придумайте пароль. Ссылка действует 3 дня.</p>${button(link, "Задать пароль")}<p style="color:${C.muted};font-size:12px">Вход в админку: ${esc(site)}/admin, логин — этот e-mail.</p>`
+      : `<p>${hello}</p><p>Кто-то запросил новый пароль для админки Celine Baby. Если это вы, нажмите кнопку. Ссылка действует 1 час.</p>${button(link, "Задать новый пароль")}<p style="color:${C.muted};font-size:12px">Если вы ничего не запрашивали, просто удалите это письмо: пароль останется прежним.</p>`;
+  return sendEmail(to, kind === "invite" ? "Доступ к админке Celine Baby" : "Новый пароль для админки Celine Baby", layout(kind === "invite" ? "Доступ к админке" : "Восстановление пароля", body, site));
+}

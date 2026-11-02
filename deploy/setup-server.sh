@@ -110,6 +110,7 @@ cp "$SRC"/systemd/*.service "$SRC"/systemd/*.timer /etc/systemd/system/
 install -m 755 "$SRC/backup.sh" /usr/local/bin/celinebaby-backup
 install -m 755 "$SRC/deploy.sh" /usr/local/bin/celinebaby-deploy
 install -m 755 "$SRC/switch-domain.sh" /usr/local/bin/celinebaby-switch-domain
+install -m 755 "$SRC/admin.sh" /usr/local/bin/celinebaby-admin
 echo 'celine ALL=(root) NOPASSWD: /bin/systemctl restart celinebaby.service' > /etc/sudoers.d/celinebaby
 chmod 440 /etc/sudoers.d/celinebaby
 systemctl daemon-reload
