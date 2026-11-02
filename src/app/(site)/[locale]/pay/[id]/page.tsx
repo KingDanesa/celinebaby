@@ -11,6 +11,14 @@ export const dynamic = "force-dynamic";
 export default async function PayPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { id } = await params;
   const { locale, t, href } = await pageContext(params);
+  const store = await (await import("@/lib/store")).getStore();
+  if ((await store.getOrder(id))?.payment === "kaspi_online") {
+    const { prepareKaspiPayment } = await import("@/lib/payment/kaspi-service");
+    const k = await prepareKaspiPayment(id, locale);
+    if (k.kind === "notfound") notFound();
+    if (k.kind === "paid") redirect(href(`/checkout/success?order=${id}`));
+    if (k.kind === "redirect") redirect(k.url);
+  }
   const prepared = await preparePayment(id);
   if (prepared.kind === "notfound") notFound();
   if (prepared.kind === "paid" || prepared.kind === "processing") redirect(href(`/checkout/success?order=${id}`));

@@ -183,6 +183,7 @@ const ru = {
     paymentTitle: "Оплата",
     paymentMethods: [
       { id: "halyk", title: "Онлайн картой", text: "Visa, Mastercard, Apple Pay, рассрочка Halyk" },
+      { id: "kaspi_online", title: "Kaspi онлайн", text: "Оплата в приложении Kaspi.kz, Kaspi Red и рассрочка" },
       { id: "kaspi", title: "Kaspi по счёту", text: "Менеджер пришлёт счёт Kaspi после подтверждения" },
     ],
     summary: "Ваш заказ",

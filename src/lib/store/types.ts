@@ -31,6 +31,12 @@ export type HalykState =
 
 /** One attempt to pay an order online (a new attempt gets a new invoice id). */
 export interface PaymentAttempt {
+  /** Which bank handles this attempt; missing means Halyk (attempts made before Kaspi was added). */
+  provider?: "halyk" | "kaspi";
+  /** Payment id on the provider's side (Kaspi). */
+  externalId?: string;
+  /** Where to send the customer to pay (Kaspi payment page). */
+  redirectUrl?: string;
   invoiceId: string;
   /** Random per-attempt secret, sent to the bank and checked in its callback. Never shown to the browser. */
   secretHash: string;
@@ -54,7 +60,7 @@ export interface Order {
   items: CartItem[];
   subtotal: number;
   delivery: string;
-  /** Payment method id: "halyk" (online) or "kaspi" (invoice from manager). */
+  /** Payment method id: "halyk" (card online), "kaspi_online" (Kaspi online) or "kaspi" (invoice from manager). */
   payment: string;
   paymentStatus: PaymentStatus;
   /** Invoice id of the current payment attempt. */

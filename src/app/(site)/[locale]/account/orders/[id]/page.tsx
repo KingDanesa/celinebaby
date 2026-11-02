@@ -20,7 +20,7 @@ export default async function AccountOrderPage({ params }: { params: Promise<{ l
   if (!order) notFound();
   const mine = order.userId === user.id || (order.customer.email ?? "").toLowerCase() === user.email.toLowerCase();
   if (!mine) notFound();
-  if (order.payment === "halyk" && order.paymentStatus !== "paid") order = (await syncPayment(id)) ?? order;
+  if ((order.payment === "halyk" || order.payment === "kaspi_online") && order.paymentStatus !== "paid") order = (await syncPayment(id)) ?? order;
 
   const delivery = t.checkout.deliveryMethods.find((m) => m.id === order.delivery)?.title ?? order.delivery;
   const payment = t.checkout.paymentMethods.find((m) => m.id === order.payment)?.title ?? order.payment;
@@ -69,7 +69,7 @@ export default async function AccountOrderPage({ params }: { params: Promise<{ l
             <p className="mt-1">
               {payment} · {t.account.paymentStatuses[order.paymentStatus] ?? order.paymentStatus}
             </p>
-            {order.payment === "halyk" && order.paymentStatus !== "paid" && (
+            {(order.payment === "halyk" || order.payment === "kaspi_online") && order.paymentStatus !== "paid" && (
               <Link href={href(`/pay/${order.id}`)} className="btn-primary mt-4 w-full">
                 {t.checkout.payAgain}
               </Link>

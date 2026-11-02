@@ -185,6 +185,7 @@ const kk: Dictionary = {
     paymentTitle: "Төлем",
     paymentMethods: [
       { id: "halyk", title: "Онлайн картамен", text: "Visa, Mastercard, Apple Pay, Halyk бөліп төлеу" },
+      { id: "kaspi_online", title: "Kaspi онлайн", text: "Kaspi.kz қосымшасында төлеу, Kaspi Red және бөліп төлеу" },
       { id: "kaspi", title: "Kaspi шот бойынша", text: "Менеджер растағаннан кейін Kaspi шотын жібереді" },
     ],
     summary: "Сіздің тапсырысыңыз",

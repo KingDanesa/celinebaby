@@ -24,8 +24,8 @@ import {
  *    so two parallel requests never charge twice, then we wait for CHARGE.
  */
 
-const PENDING: HalykState[] = ["CREATED", "PENDING", "NEW", "FINGERPRINT", "VERIFIED"];
-const FAILED: HalykState[] = ["FAILED", "REJECT", "3D", "CANCEL", "CANCEL_OLD", "ERROR"];
+export const PENDING: HalykState[] = ["CREATED", "PENDING", "NEW", "FINGERPRINT", "VERIFIED"];
+export const FAILED: HalykState[] = ["FAILED", "REJECT", "3D", "CANCEL", "CANCEL_OLD", "ERROR"];
 const KNOWN: HalykState[] = [...PENDING, "AUTH", "CAPTURING", "CHARGE", "REFUND", ...FAILED];
 const STALE_CLAIM_MS = 2 * 60 * 1000;
 
@@ -61,18 +61,18 @@ function settle(o: Order): Order {
   return o;
 }
 
-function attemptOf(o: Order, invoiceId: string): PaymentAttempt | undefined {
+export function attemptOf(o: Order, invoiceId: string): PaymentAttempt | undefined {
   return o.payments?.find((p) => p.invoiceId === invoiceId);
 }
 
-function latest(o: Order): PaymentAttempt | undefined {
+export function latest(o: Order): PaymentAttempt | undefined {
   return o.payments?.[o.payments.length - 1];
 }
 
 type Change = (a: PaymentAttempt, o: Order) => boolean;
 
 /** Changes one attempt under the order's optimistic lock; `fn` returns false to leave it untouched. */
-async function updateAttempt(orderId: string, invoiceId: string, fn: Change) {
+export async function updateAttempt(orderId: string, invoiceId: string, fn: Change) {
   const res = await mutateOrder(orderId, (o) => {
     const a = attemptOf(o, invoiceId);
     if (!a || !fn(a, o)) return null;
@@ -231,6 +231,7 @@ export async function reconcile(orderId: string, invoiceId: string, allowReject 
 export async function syncPayment(orderId: string): Promise<Order | null> {
   const store = await getStore();
   const order = await store.getOrder(orderId);
+  if (order?.payment === "kaspi_online") return (await import("./kaspi-service")).syncKaspi(orderId);
   if (!order || order.payment !== "halyk" || !order.payments?.length || !halykEnabled()) return order;
   if (order.paymentStatus === "paid" || order.paymentStatus === "refunded") return order;
   const open = order.payments.filter((p) => !FAILED.includes(p.state) && p.state !== "CHARGE" && p.state !== "REFUND");
@@ -336,7 +337,7 @@ export async function reconcileOpenPayments(maxAgeHours = 72) {
   const since = Date.now() - maxAgeHours * 3600 * 1000;
   const orders = (await store.listOrders()).filter(
     (o) =>
-      o.payment === "halyk" &&
+      (o.payment === "halyk" || o.payment === "kaspi_online") &&
       Date.parse(o.createdAt) >= since &&
       (o.paymentStatus === "pending" || o.paymentStatus === "authorized"),
   );

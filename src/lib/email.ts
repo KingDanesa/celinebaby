@@ -142,7 +142,7 @@ function customerBlock(order: Order) {
 /** New order: notify the shop and confirm to the customer. */
 export async function sendNewOrderEmails(order: Order, siteUrl: string) {
   const admin = `${siteUrl}/admin/orders/${order.id}`;
-  const waiting = order.payment === "halyk" ? " · ждёт онлайн-оплату" : "";
+  const waiting = order.payment === "halyk" || order.payment === "kaspi_online" ? " · ждёт онлайн-оплату" : "";
   await sendEmail(
     NOTIFY,
     `Новый заказ ${order.id} на ${formatPrice(order.subtotal)}${waiting}`,
@@ -154,7 +154,7 @@ export async function sendNewOrderEmails(order: Order, siteUrl: string) {
   if (!email) return;
   const l = lang(order);
   const next =
-    order.payment === "halyk"
+    order.payment === "halyk" || order.payment === "kaspi_online"
       ? `<p>${tr(l, "Если оплата ещё не завершена, вернитесь к ней по кнопке ниже.", "Төлем әлі аяқталмаса, төмендегі батырма арқылы оралыңыз.")}</p>${button(`${siteUrl}/${l}/pay/${order.id}`, tr(l, "Оплатить заказ", "Тапсырысты төлеу"))}`
       : `<p>${tr(l, "Менеджер свяжется с вами в ближайшее время и пришлёт счёт для оплаты через Kaspi.", "Менеджер жақын арада сізбен байланысып, Kaspi арқылы төлеуге шот жібереді.")}</p>`;
   await sendEmail(
@@ -177,7 +177,7 @@ export async function sendPaidEmails(order: Order, siteUrl: string) {
   await sendEmail(
     NOTIFY,
     `Оплачен заказ ${order.id} на ${formatPrice(order.subtotal)}`,
-    layout(`Заказ ${order.id} оплачен`, `<p>${order.payment === "halyk" ? "Банк подтвердил оплату, деньги списаны." : "Заказ отмечен оплаченным в админке."}</p>` + customerBlock(order) + orderTable(order, "ru") + button(`${siteUrl}/admin/orders/${order.id}`, "Открыть в админке"), siteUrl),
+    layout(`Заказ ${order.id} оплачен`, `<p>${order.payment === "halyk" || order.payment === "kaspi_online" ? "Банк подтвердил оплату, деньги списаны." : "Заказ отмечен оплаченным в админке."}</p>` + customerBlock(order) + orderTable(order, "ru") + button(`${siteUrl}/admin/orders/${order.id}`, "Открыть в админке"), siteUrl),
   );
   const email = order.customer.email;
   if (!email) return;
@@ -197,7 +197,7 @@ export async function sendPaidEmails(order: Order, siteUrl: string) {
 /** Status changed in the admin: tell the customer about the steps that matter to them. */
 export async function sendStatusEmail(order: Order, siteUrl: string) {
   const email = order.customer.email;
-  if (order.status === "paid" && order.payment !== "halyk") return sendPaidEmails(order, siteUrl);
+  if (order.status === "paid" && order.payment === "kaspi") return sendPaidEmails(order, siteUrl);
   if (!email) return;
   const l = lang(order);
   const account = order.userId ? button(`${siteUrl}/${l}/account/orders/${order.id}`, tr(l, "Мой заказ", "Менің тапсырысым")) : "";

@@ -19,12 +19,12 @@ export default async function SuccessPage({
   const { order: id } = await searchParams;
   const store = await getStore();
   let order = id ? await store.getOrder(id) : null;
-  if (order && order.payment === "halyk" && order.paymentStatus !== "paid") {
+  if (order && (order.payment === "halyk" || order.payment === "kaspi_online") && order.paymentStatus !== "paid") {
     order = (await syncPayment(order.id)) ?? order;
   }
 
   const ps = order?.paymentStatus;
-  const state = !order || order.payment !== "halyk" ? "kaspi" : ps === "paid" ? "paid" : ps === "failed" || ps === "unpaid" ? "failed" : "pending";
+  const state = !order || !(order.payment === "halyk" || order.payment === "kaspi_online") ? "kaspi" : ps === "paid" ? "paid" : ps === "failed" || ps === "unpaid" ? "failed" : "pending";
   const text = { paid: t.checkout.successPaid, pending: t.checkout.successPending, kaspi: t.checkout.successKaspi, failed: t.checkout.successFailed }[state];
   const Icon = state === "failed" ? XCircle : state === "pending" ? Clock : Check;
   const tone = state === "failed" ? "bg-rose-700" : state === "pending" ? "bg-ink" : "bg-burgundy";

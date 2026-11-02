@@ -12,12 +12,12 @@ import { FREE_DELIVERY_FROM } from "@/data/categories";
 import { placeOrder } from "@/lib/actions/orders";
 import type { SiteUser } from "@/lib/types";
 
-export function CheckoutForm({ user, onlinePayment }: { user: SiteUser | null; onlinePayment: boolean }) {
+export function CheckoutForm({ user, online }: { user: SiteUser | null; online: { halyk: boolean; kaspi: boolean } }) {
   const { t, href, locale } = useI18n();
   const { items, subtotal, clear, hydrated } = useCart();
   const router = useRouter();
   const [delivery, setDelivery] = useState(t.checkout.deliveryMethods[0].id);
-  const [payment, setPayment] = useState(onlinePayment ? "halyk" : "kaspi");
+  const [payment, setPayment] = useState(online.halyk ? "halyk" : online.kaspi ? "kaspi_online" : "kaspi");
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -34,7 +34,7 @@ export function CheckoutForm({ user, onlinePayment }: { user: SiteUser | null; o
   }
 
   const free = subtotal >= FREE_DELIVERY_FROM;
-  const methods = t.checkout.paymentMethods.filter((m) => onlinePayment || m.id !== "halyk");
+  const methods = t.checkout.paymentMethods.filter((m) => (m.id === "halyk" ? online.halyk : m.id === "kaspi_online" ? online.kaspi : true));
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -158,7 +158,7 @@ export function CheckoutForm({ user, onlinePayment }: { user: SiteUser | null; o
             </div>
             {error && <p className="mt-4 rounded-xl bg-rose-100 px-4 py-2 text-[13px] text-rose-800">{t.checkout.required}</p>}
             <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
-              <Lock className="h-4 w-4" /> {payment === "halyk" ? t.checkout.pay : t.checkout.place} · {formatPrice(subtotal)}
+              <Lock className="h-4 w-4" /> {payment === "halyk" || payment === "kaspi_online" ? t.checkout.pay : t.checkout.place} · {formatPrice(subtotal)}
             </button>
             <p className="mt-3 text-[11px] leading-relaxed text-muted">{t.checkout.agree}</p>
           </div>

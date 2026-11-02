@@ -82,7 +82,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                 {[...order.payments].reverse().map((p) => (
                   <li key={p.invoiceId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <span className="tabular-nums text-ink-soft">
-                      инвойс {p.invoiceId}
+                      {p.provider === "kaspi" ? "Kaspi" : "Halyk"} · счёт {p.invoiceId}
                       {p.test ? " · тест" : ""}
                       {p.cardMask ? ` · карта ${p.cardMask}` : ""}
                     </span>
@@ -106,7 +106,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               <Row k="Комментарий" v={order.customer.comment ?? "—"} />
               <Row k="Доставка" v={delivery} />
               <Row k="Оплата" v={`${payment} · ${paymentStatusLabel[order.paymentStatus ?? "unpaid"]}`} />
-              {order.paymentRef && <Row k="Транзакция Halyk" v={order.paymentRef} />}
+              {order.paymentRef && <Row k={order.payment === "kaspi_online" ? "Платёж Kaspi" : "Транзакция Halyk"} v={order.paymentRef} />}
               {order.paidAt && <Row k="Оплачен" v={new Date(order.paidAt).toLocaleString("ru-RU")} />}
               <Row k="Аккаунт" v={order.userId ? "Зарегистрированный покупатель" : "Гость"} />
             </dl>

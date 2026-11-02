@@ -5,6 +5,7 @@ import type { CartItem } from "@/lib/types";
 import { getCurrentUser } from "@/lib/auth/server";
 import { sendNewOrderEmails } from "@/lib/email";
 import { halykEnabled } from "@/lib/payment/halyk";
+import { kaspiOnlineEnabled } from "@/lib/payment/kaspi";
 import { siteUrl } from "@/lib/payment/service";
 import { loadProducts } from "@/lib/products";
 
@@ -36,14 +37,15 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{ ok: true; id
 
   const user = await getCurrentUser();
   const store = await getStore();
-  const online = input.payment === "halyk" && halykEnabled();
+  const method = input.payment === "halyk" && halykEnabled() ? "halyk" : input.payment === "kaspi_online" && kaspiOnlineEnabled() ? "kaspi_online" : "kaspi";
+  const online = method !== "kaspi";
   const base: Omit<Order, "id"> = {
     createdAt: new Date().toISOString(),
     status: "new",
     items,
     subtotal: items.reduce((s, i) => s + i.price * i.qty, 0),
     delivery: clip(input.delivery, 40),
-    payment: online ? "halyk" : "kaspi",
+    payment: method,
     paymentStatus: "unpaid",
     customer: {
       name: clip(input.customer.name, 120),
