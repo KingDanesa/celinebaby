@@ -20,7 +20,8 @@ export function getMenuData(products: Product[]): MenuData {
         group: c.group,
       })),
     ageImages: {
-      newborn: pick((p) => p.slug === "kombinezon-nv-krem") || pick((p) => p.ages.includes("newborn") && p.images.length > 2),
+      // Fixed photo chosen by the owner (a baby in a knitted romper).
+      newborn: "/img/menu-newborn.jpg",
       toddler: pick((p) => p.ages.includes("toddler") && !p.ages.includes("newborn") && p.images.length > 2),
     },
     genderImages: {
