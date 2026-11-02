@@ -96,3 +96,13 @@ create table if not exists app_meta (
   key    text primary key,
   value  text not null
 );
+
+-- Requests from site forms: "Напишите нам" (contact) and gift certificate orders (gift).
+create table if not exists requests (
+  id          bigserial primary key,
+  kind        text not null,
+  status      text not null default 'new',
+  data        jsonb not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists requests_created_idx on requests (created_at desc);

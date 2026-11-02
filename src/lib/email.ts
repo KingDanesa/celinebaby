@@ -253,3 +253,28 @@ export async function sendAdminLinkEmail(to: string, link: string, kind: "invite
       : `<p>${hello}</p><p>Кто-то запросил новый пароль для админки Celine Baby. Если это вы, нажмите кнопку. Ссылка действует 1 час.</p>${button(link, "Задать новый пароль")}<p style="color:${C.muted};font-size:12px">Если вы ничего не запрашивали, просто удалите это письмо: пароль останется прежним.</p>`;
   return sendEmail(to, kind === "invite" ? "Доступ к админке Celine Baby" : "Новый пароль для админки Celine Baby", layout(kind === "invite" ? "Доступ к админке" : "Восстановление пароля", body, site));
 }
+
+/** A request from the site's forms (same subjects as the old site's notifications). */
+export async function sendRequestEmail(
+  kind: "contact" | "gift",
+  d: { name: string; phone: string; email?: string; message?: string; amount?: number; format?: string; recipient?: string; recipientEmail?: string },
+  id: number | null,
+): Promise<boolean> {
+  const site = siteUrl();
+  const row = (k: string, v?: string) => (v ? `<tr><td style="padding:4px 0;color:${C.muted};width:130px;vertical-align:top">${k}</td><td style="padding:4px 0">${esc(v)}</td></tr>` : "");
+  const formats: Record<string, string> = { digital: "электронный", box: "в фирменной упаковке" };
+  const rows =
+    row("Имя", d.name) +
+    row("Телефон", d.phone) +
+    row("E-mail", d.email) +
+    (kind === "gift"
+      ? row("Номинал", d.amount ? formatPrice(d.amount) : undefined) + row("Формат", d.format ? (formats[d.format] ?? d.format) : undefined) + row("Получатель", d.recipient) + row("E-mail получателя", d.recipientEmail)
+      : "") +
+    row(kind === "gift" ? "Пожелание" : "Сообщение", d.message);
+  const subject = kind === "gift" ? "Покупка сертификата с сайта Celine Baby" : "Получить обратный звонок с сайта Celine Baby";
+  const body =
+    `<table role="presentation" style="width:100%;font-size:14px;margin:0 0 18px;background:${C.cream};border-radius:12px;padding:14px 16px">${rows}</table>` +
+    `<p style="margin:0 0 6px"><a href="tel:${esc(d.phone.replace(/[^0-9+]/g, ""))}" style="color:${C.burgundy}">Позвонить</a> · <a href="https://wa.me/${esc(d.phone.replace(/\D/g, ""))}" style="color:${C.burgundy}">Написать в WhatsApp</a></p>` +
+    (id ? button(`${site}/admin/requests`, "Все заявки в админке") : "");
+  return sendEmail(NOTIFY, subject, layout(subject, body, site), d.email);
+}

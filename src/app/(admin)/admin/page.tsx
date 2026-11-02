@@ -9,11 +9,12 @@ import { formatPrice, imageUrl } from "@/lib/format";
 import ru from "@/i18n/ru";
 import { halykConfig, halykEnabled } from "@/lib/payment/halyk";
 import { emailMode } from "@/lib/email";
+import { countNewRequests } from "@/lib/requests";
 
 export default async function AdminHome() {
   await requireAdmin();
   const [products, store] = await Promise.all([loadAllProducts(), getStore()]);
-  const orders = await store.listOrders();
+  const [orders, newRequests] = await Promise.all([store.listOrders(), countNewRequests()]);
   const active = products.filter((p) => p.status !== "draft");
   const drafts = products.length - active.length;
   const noPhoto = products.filter((p) => p.images.length === 0).length;
@@ -30,11 +31,12 @@ export default async function AdminHome() {
           </Link>
         }
       />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Товаров на сайте" value={active.length} href="/admin/products" />
         <Stat label="Черновиков" value={drafts} href="/admin/products?status=draft" />
         <Stat label="Без фото" value={noPhoto} href="/admin/products?photo=none" />
         <Stat label="Новых заказов" value={orders.filter((o) => o.status === "new").length} href="/admin/orders" />
+        <Stat label="Новых заявок" value={newRequests} href="/admin/requests" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

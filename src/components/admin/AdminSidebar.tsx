@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ExternalLink, KeyRound, Newspaper, LayoutDashboard, LogOut, Menu, Package, ShoppingBag, Tags, Users, X } from "lucide-react";
+import { ExternalLink, Inbox, KeyRound, Newspaper, LayoutDashboard, LogOut, Menu, Package, ShoppingBag, Tags, Users, X } from "lucide-react";
 import { cn } from "@/lib/format";
 import { logoutAction } from "@/lib/admin/access-actions";
 import { Wordmark } from "@/components/ui/Logo";
@@ -12,6 +12,7 @@ const nav = [
   { href: "/admin", label: "Обзор", icon: LayoutDashboard, exact: true },
   { href: "/admin/products", label: "Товары", icon: Package },
   { href: "/admin/orders", label: "Заказы", icon: ShoppingBag },
+  { href: "/admin/requests", label: "Заявки", icon: Inbox },
   { href: "/admin/customers", label: "Покупатели", icon: Users },
   { href: "/admin/categories", label: "Категории", icon: Tags },
   { href: "/admin/blog", label: "Блог", icon: Newspaper },
