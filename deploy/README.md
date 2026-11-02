@@ -82,14 +82,14 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_USER=celinebabykazakhstan@gmail.com
 SMTP_PASS=пароль_приложения
-EMAIL_FROM=Celine Baby <celinebabykazakhstan@gmail.com>
+EMAIL_FROM="Celine Baby <celinebabykazakhstan@gmail.com>"
 ```
 
 **Вариант Б, Resend с адреса orders@celinebaby.kz.** Выглядит солиднее. Нужен аккаунт resend.com и три DNS-записи домена, которые покажет Resend.
 
 ```
 RESEND_API_KEY=re_...
-EMAIL_FROM=Celine Baby <orders@celinebaby.kz>
+EMAIL_FROM="Celine Baby <orders@celinebaby.kz>"
 ```
 
 Режим отправки виден в админке на странице «Обзор».

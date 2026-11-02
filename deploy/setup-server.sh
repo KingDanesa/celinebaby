@@ -81,7 +81,7 @@ SMTP_PORT=465
 SMTP_USER=
 SMTP_PASS=
 RESEND_API_KEY=
-EMAIL_FROM=Celine Baby <orders@celinebaby.kz>
+EMAIL_FROM="Celine Baby <orders@celinebaby.kz>"
 ORDER_NOTIFY_EMAIL=celinebabykazakhstan@gmail.com
 EOF
   chown root:celine "$ENV_FILE"
