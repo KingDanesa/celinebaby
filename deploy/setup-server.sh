@@ -113,7 +113,8 @@ install -m 755 "$SRC/switch-domain.sh" /usr/local/bin/celinebaby-switch-domain
 echo 'celine ALL=(root) NOPASSWD: /bin/systemctl restart celinebaby.service' > /etc/sudoers.d/celinebaby
 chmod 440 /etc/sudoers.d/celinebaby
 systemctl daemon-reload
-systemctl enable celinebaby.service celinebaby-reconcile.timer celinebaby-backup.timer
+systemctl enable celinebaby.service
+systemctl enable --now celinebaby-reconcile.timer celinebaby-backup.timer
 
 say "HTTPS certificate for the preview address"
 certbot --nginx --non-interactive --agree-tos --register-unsafely-without-email --redirect -d "$PREVIEW_HOST" || echo "certbot failed: run it again once the server answers on $PREVIEW_HOST"
