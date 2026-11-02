@@ -49,11 +49,11 @@ export default async function ProductPage({ params }: Props) {
       />
 
       <div className="mt-5 grid gap-10 lg:grid-cols-12 lg:gap-14">
-        <div className="lg:col-span-7">
+        <div className="min-w-0 lg:col-span-7">
           <ProductGallery images={product.images} imagesFull={product.imagesFull} alt={product.name} />
         </div>
 
-        <div className="lg:col-span-5">
+        <div className="min-w-0 lg:col-span-5">
           <div className="lg:sticky lg:top-[100px]">
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wider">
               {product.tags.includes("new") && <span className="rounded-full bg-sand px-2.5 py-1 text-ink">{t.catalog.tagNew}</span>}

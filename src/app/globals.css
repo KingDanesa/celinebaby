@@ -48,6 +48,11 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
   }
+  /* Safety net: nothing may widen the page sideways on phones (clip keeps the sticky header working). */
+  html,
+  body {
+    overflow-x: clip;
+  }
   body {
     @apply bg-paper text-ink font-sans;
     font-feature-settings: "ss01", "cv11";

@@ -13,8 +13,9 @@ export default async function SizesPage({ params }: { params: Promise<{ locale: 
   return (
     <>
       <PageHeader title={s.title} lead={s.lead} crumbs={[{ label: t.catalog.breadcrumbHome, href: href("/") }, { label: s.title }]} />
-      <div className="container-x mt-10 grid gap-8 lg:grid-cols-2">
+      <div className="container-x mt-10 grid items-start gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <Table title={s.clothes} head={[s.age, s.height]} rows={s.clothesRows} />
+        <Table title={s.exact} head={[s.age, s.height]} rows={s.exactRows} />
         <Table title={s.hats} head={[s.age, s.head]} rows={s.hatRows} />
       </div>
       <div className="container-x mt-10">
