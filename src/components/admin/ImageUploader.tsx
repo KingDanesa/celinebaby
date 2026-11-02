@@ -5,10 +5,13 @@ import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, X } from "lucide-react";
 import { imageUrl, cn } from "@/lib/format";
 
-const MAX_SIDE = 1600;
+const MAX_SIDE = 2000;
+/** Below this width a photo looks soft on phones (it fills the screen, ~1000 px on an iPhone). */
+const MIN_GOOD_WIDTH = 1000;
 
-async function shrink(file: File): Promise<Blob> {
+async function shrink(file: File): Promise<{ blob: Blob; width: number }> {
   const bitmap = await createImageBitmap(file);
+  const width = bitmap.width;
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
   const h = Math.round(bitmap.height * scale);
@@ -19,24 +22,28 @@ async function shrink(file: File): Promise<Blob> {
   ctx.drawImage(bitmap, 0, 0, w, h);
   bitmap.close();
   return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("canvas"))), "image/jpeg", 0.86),
+    canvas.toBlob((b) => (b ? resolve({ blob: b, width }) : reject(new Error("canvas"))), "image/jpeg", 0.9),
   );
 }
 
 export function ImageUploader({ images, onChange }: { images: string[]; onChange: (next: string[]) => void }) {
   const [busy, setBusy] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [small, setSmall] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const upload = async (files: FileList | File[]) => {
     setError(null);
+    setSmall([]);
+    const tooSmall: string[] = [];
     const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (!list.length) return;
     setBusy((b) => b + list.length);
     const added: string[] = [];
     for (const file of list) {
       try {
-        const blob = await shrink(file);
+        const { blob, width } = await shrink(file);
+        if (width < MIN_GOOD_WIDTH) tooSmall.push(`${file.name} (${width} px)`);
         const fd = new FormData();
         fd.append("file", new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }));
         const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
@@ -51,6 +58,7 @@ export function ImageUploader({ images, onChange }: { images: string[]; onChange
       }
     }
     if (added.length) onChange([...images, ...added]);
+    setSmall(tooSmall);
   };
 
   const move = (i: number, dir: -1 | 1) => {
@@ -115,7 +123,14 @@ export function ImageUploader({ images, onChange }: { images: string[]; onChange
         }}
       />
       {error && <p className="mt-2 text-[12px] text-rose-700">{error}</p>}
-      <p className="mt-2 text-[12px] text-muted">JPG, PNG или WebP. Можно выбрать сразу несколько или перетащить файлы на плитку.</p>
+      {small.length > 0 && (
+        <p className="mt-2 rounded-xl bg-cream px-3 py-2 text-[12px] text-ink">
+          Маленькие фото, на телефоне будут нечёткими: {small.join(", ")}. Лучше загрузить оригинал шириной от {MIN_GOOD_WIDTH} px, а не скриншот.
+        </p>
+      )}
+      <p className="mt-2 text-[12px] text-muted">
+        JPG, PNG или WebP. Можно выбрать сразу несколько или перетащить файлы на плитку. Лучше оригиналы с камеры шириной от {MIN_GOOD_WIDTH} px, не скриншоты.
+      </p>
     </div>
   );
 }
