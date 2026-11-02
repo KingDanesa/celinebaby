@@ -88,7 +88,7 @@ export function ProductGallery({ images, imagesFull, alt }: { images: string[]; 
                 aria-label={`${alt}, фото ${i + 1}`}
                 className="relative h-full w-full shrink-0 cursor-zoom-in snap-center snap-always"
               >
-                <Image src={imageUrl(src)} alt={i === 0 ? alt : ""} fill priority={i === 0} loading={i === 1 ? "eager" : undefined} sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+                <Image src={imageUrl(imagesFull[i] ?? src)} alt={i === 0 ? alt : ""} fill priority={i === 0} loading={i === 1 ? "eager" : undefined} sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
               </button>
             ))}
           </div>
