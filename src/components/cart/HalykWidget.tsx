@@ -23,7 +23,7 @@ interface PaymentObject {
 
 declare global {
   interface Window {
-    halyk?: { pay: (p: PaymentObject & { cardSave?: boolean }) => void };
+    halyk?: { pay: (p: PaymentObject) => void };
   }
 }
 
@@ -48,7 +48,8 @@ export function HalykWidget({ scriptUrl, payment, labels }: { scriptUrl: string;
   const open = () => {
     if (!window.halyk) return;
     setOpening(true);
-    window.halyk.pay({ ...payment, cardSave: false });
+    // Same call as the old site's module: the payment object only, no extra options.
+    window.halyk.pay(payment);
     setTimeout(() => setOpening(false), 4000);
   };
 
