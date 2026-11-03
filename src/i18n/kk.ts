@@ -160,6 +160,13 @@ const kk: Dictionary = {
     freeDeliveryLeft: "Тегін жеткізуге дейін қалды",
     freeDeliveryDone: "Қазақстан бойынша жеткізу тегін",
     items: "тауар",
+    promo: "Промокод",
+    promoPlaceholder: "Промокодты енгізіңіз",
+    promoApply: "Қолдану",
+    promoRemove: "Алып тастау",
+    promoDiscount: "Промокод бойынша жеңілдік",
+    promoApplied: "Промокод қолданылды",
+    promoGone: "Промокод енді жарамсыз, біз оны алып тастадық. Соманы тексеріп, тапсырысты қайта рәсімдеңіз.",
   },
   wishlist: {
     title: "Таңдаулылар",

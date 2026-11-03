@@ -7,10 +7,11 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { formatPrice, imageUrl } from "@/lib/format";
 import { FREE_DELIVERY_FROM } from "@/data/categories";
+import { PromoField } from "./PromoField";
 
 export function CartPage() {
   const { t, href } = useI18n();
-  const { items, subtotal, setQty, remove, count, hydrated } = useCart();
+  const { items, subtotal, discount, total, promo, setQty, remove, count, hydrated } = useCart();
 
   if (!hydrated) return <div className="container-x py-20" />;
 
@@ -77,15 +78,26 @@ export function CartPage() {
               <span className="text-muted">{t.cart.subtotal}</span>
               <span className="tabular-nums">{formatPrice(subtotal)}</span>
             </div>
+            {discount > 0 && promo && (
+              <div className="mt-2 flex justify-between text-[14px]">
+                <span className="text-muted">
+                  {t.cart.promoDiscount} {promo.code}
+                </span>
+                <span className="tabular-nums font-semibold text-rose-700">−{formatPrice(discount)}</span>
+              </div>
+            )}
             <div className="mt-2 flex justify-between text-[14px]">
               <span className="text-muted">{t.cart.delivery}</span>
               <span className={free ? "font-semibold text-rose-700" : "text-muted"}>{free ? t.cart.deliveryFree : t.cart.deliveryCalc}</span>
             </div>
             <div className="mt-4 flex justify-between border-t border-line pt-4 text-[17px] font-semibold">
               <span>{t.cart.total}</span>
-              <span className="tabular-nums">{formatPrice(subtotal)}</span>
+              <span className="tabular-nums">{formatPrice(total)}</span>
             </div>
-            <Link href={href("/checkout")} className="btn-primary mt-6 w-full">
+            <div className="mt-5">
+              <PromoField />
+            </div>
+            <Link href={href("/checkout")} className="btn-primary mt-5 w-full">
               {t.cart.checkout}
             </Link>
             <Link href={href("/catalog")} className="mt-3 block text-center text-[13px] text-muted hover:text-ink">

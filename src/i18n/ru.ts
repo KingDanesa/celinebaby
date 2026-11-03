@@ -158,6 +158,13 @@ const ru = {
     freeDeliveryLeft: "До бесплатной доставки осталось",
     freeDeliveryDone: "Доставка по Казахстану бесплатно",
     items: "товаров",
+    promo: "Промокод",
+    promoPlaceholder: "Введите промокод",
+    promoApply: "Применить",
+    promoRemove: "Убрать",
+    promoDiscount: "Скидка по промокоду",
+    promoApplied: "Промокод применён",
+    promoGone: "Промокод больше не действует, мы его убрали. Проверьте сумму и оформите заказ ещё раз.",
   },
   wishlist: {
     title: "Избранное",

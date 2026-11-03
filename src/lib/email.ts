@@ -87,7 +87,12 @@ function orderTable(order: Order, l: L): string {
       </tr>`,
     )
     .join("");
-  return `<table role="presentation" style="width:100%;border-collapse:collapse;font-size:14px;color:${C.ink}">${rows}
+  const d = order.discount;
+  const promo = d
+    ? `<tr><td style="padding:10px 0 0;color:${C.muted}">${tr(l, "Товары", "Тауарлар")}</td><td style="padding:10px 0 0;text-align:right;color:${C.muted}">${formatPrice(d.itemsTotal)}</td></tr>
+    <tr><td style="padding:4px 0 0;color:${C.burgundy}">${tr(l, "Скидка по промокоду", "Промокод бойынша жеңілдік")} ${esc(d.code)} (−${d.percent}%)</td><td style="padding:4px 0 0;text-align:right;color:${C.burgundy}">−${formatPrice(d.amount)}</td></tr>`
+    : "";
+  return `<table role="presentation" style="width:100%;border-collapse:collapse;font-size:14px;color:${C.ink}">${rows}${promo}
     <tr><td style="padding:14px 0;font-weight:bold">${tr(l, "Итого", "Барлығы")}</td><td style="padding:14px 0;text-align:right;font-weight:bold">${formatPrice(order.subtotal)}</td></tr>
   </table>`;
 }

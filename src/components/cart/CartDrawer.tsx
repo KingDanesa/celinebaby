@@ -10,7 +10,7 @@ import { formatPrice, imageUrl } from "@/lib/format";
 import { FREE_DELIVERY_FROM } from "@/data/categories";
 
 export function CartDrawer() {
-  const { isOpen, close, items, subtotal, setQty, remove, count } = useCart();
+  const { isOpen, close, items, subtotal, discount, total, promo, setQty, remove, count } = useCart();
   const { t, href } = useI18n();
 
   useEffect(() => {
@@ -102,8 +102,8 @@ export function CartDrawer() {
             </ul>
             <div className="border-t border-line p-5">
               <div className="mb-4 flex items-center justify-between text-[15px]">
-                <span className="text-muted">{t.cart.subtotal}</span>
-                <span className="font-semibold tabular-nums">{formatPrice(subtotal)}</span>
+                <span className="text-muted">{discount > 0 && promo ? `${t.cart.total} · ${promo.code} −${promo.percent}%` : t.cart.subtotal}</span>
+                <span className="font-semibold tabular-nums">{formatPrice(discount > 0 ? total : subtotal)}</span>
               </div>
               <Link href={href("/checkout")} onClick={close} className="btn-primary w-full">
                 {t.cart.checkout}

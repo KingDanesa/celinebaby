@@ -127,3 +127,16 @@ create table if not exists admin_audit (
 );
 create index if not exists admin_audit_at_idx on admin_audit (id desc);
 create index if not exists admin_audit_email_idx on admin_audit (email, id desc);
+
+-- Promo codes: a percent discount valid between two calendar days (Astana time, both included).
+create table if not exists promo_codes (
+  code        text primary key,
+  percent     integer not null check (percent between 1 and 90),
+  starts_on   date not null,
+  ends_on     date not null,
+  active      boolean not null default true,
+  note        text not null default '',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists orders_promo_idx on orders ((data->'discount'->>'code'));

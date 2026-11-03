@@ -41,6 +41,9 @@ const TEXT: Record<AuditAction, string> = {
   blog_created: "добавил статью",
   blog_updated: "изменил статью",
   blog_deleted: "удалил статью",
+  promo_created: "создал промокод",
+  promo_updated: "изменил промокод",
+  promo_deleted: "удалил промокод",
 };
 
 const TONE: Partial<Record<AuditAction, string>> = {
@@ -51,6 +54,8 @@ const TONE: Partial<Record<AuditAction, string>> = {
   product_created: "bg-mint text-ink",
   blog_created: "bg-mint text-ink",
   staff_invited: "bg-mint text-ink",
+  promo_created: "bg-mint text-ink",
+  promo_deleted: "bg-rose-100 text-rose-800",
 };
 
 function targetHref(e: AuditEntry): string | null {
@@ -59,6 +64,7 @@ function targetHref(e: AuditEntry): string | null {
   if (e.action === "order_status") return `/admin/orders/${e.target}`;
   if (e.action === "request_status") return "/admin/requests";
   if (e.action.startsWith("blog_") && e.action !== "blog_deleted") return `/admin/blog/${e.target}`;
+  if (e.action === "promo_created" || e.action === "promo_updated") return "/admin/promos";
   return null;
 }
 

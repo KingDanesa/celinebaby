@@ -56,6 +56,20 @@ export default async function AccountOrderPage({ params }: { params: Promise<{ l
               </li>
             ))}
           </ul>
+          {order.discount && (
+            <div className="mt-3 flex flex-col gap-1 border-t border-line pt-3 text-[14px]">
+              <div className="flex justify-between text-muted">
+                <span>{t.cart.subtotal}</span>
+                <span className="tabular-nums">{formatPrice(order.discount.itemsTotal)}</span>
+              </div>
+              <div className="flex justify-between text-rose-700">
+                <span>
+                  {t.cart.promoDiscount} {order.discount.code}
+                </span>
+                <span className="tabular-nums">−{formatPrice(order.discount.amount)}</span>
+              </div>
+            </div>
+          )}
           <div className="mt-3 flex justify-between border-t border-line pt-3 text-[15px] font-semibold">
             <span>{t.cart.total}</span>
             <span className="tabular-nums">{formatPrice(order.subtotal)}</span>

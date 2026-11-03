@@ -8,6 +8,7 @@ import { halykEnabled } from "@/lib/payment/halyk";
 import { kaspiOnlineEnabled } from "@/lib/payment/kaspi";
 import { siteUrl } from "@/lib/payment/service";
 import { loadProducts } from "@/lib/products";
+import { checkPromo, discountFor } from "@/lib/promo";
 
 export interface PlaceOrderInput {
   items: CartItem[];
@@ -15,6 +16,7 @@ export interface PlaceOrderInput {
   payment: string;
   customer: Order["customer"];
   locale: string;
+  promoCode?: string;
 }
 
 const clip = (s: string | undefined, n: number) => (s ?? "").trim().slice(0, n);
@@ -35,6 +37,16 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{ ok: true; id
     items.push({ ...i, name: p.name, slug: p.slug, price: p.price, qty: Math.max(1, Math.min(99, Math.round(Number(i.qty) || 1))) });
   }
 
+  // The discount is always recomputed here: the browser only sends the code.
+  const itemsTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+  let discount: Order["discount"];
+  if (input.promoCode?.trim()) {
+    const promo = await checkPromo(input.promoCode.slice(0, 40));
+    if (!promo.ok) return { ok: false, error: "promo" };
+    const amount = discountFor(itemsTotal, promo.percent);
+    if (amount > 0) discount = { code: promo.code, percent: promo.percent, amount, itemsTotal };
+  }
+
   const user = await getCurrentUser();
   const store = await getStore();
   const method = input.payment === "halyk" && halykEnabled() ? "halyk" : input.payment === "kaspi_online" && kaspiOnlineEnabled() ? "kaspi_online" : "kaspi";
@@ -43,7 +55,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{ ok: true; id
     createdAt: new Date().toISOString(),
     status: "new",
     items,
-    subtotal: items.reduce((s, i) => s + i.price * i.qty, 0),
+    subtotal: itemsTotal - (discount?.amount ?? 0),
+    discount,
     delivery: clip(input.delivery, 40),
     payment: method,
     paymentStatus: "unpaid",

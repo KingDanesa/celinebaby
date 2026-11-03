@@ -68,6 +68,11 @@ export interface Order {
   /** Bank transaction id of the successful payment. */
   paymentRef?: string;
   paidAt?: string;
+  /**
+   * Promo code applied at checkout. When present, `subtotal` is the amount to pay
+   * (goods minus the discount) and `itemsTotal` is the goods before the discount.
+   */
+  discount?: { code: string; percent: number; amount: number; itemsTotal: number };
   /** Online payment attempts, oldest first. */
   payments?: PaymentAttempt[];
   customer: {

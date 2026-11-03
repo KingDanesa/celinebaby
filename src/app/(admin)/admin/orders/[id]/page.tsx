@@ -71,6 +71,20 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                 </li>
               ))}
             </ul>
+            {order.discount && (
+              <div className="mt-3 flex flex-col gap-1 border-t border-line pt-3 text-[14px]">
+                <div className="flex justify-between text-muted">
+                  <span>Товары</span>
+                  <span className="tabular-nums">{formatPrice(order.discount.itemsTotal)}</span>
+                </div>
+                <div className="flex justify-between text-rose-700">
+                  <span>
+                    Промокод <b>{order.discount.code}</b> · −{order.discount.percent}%
+                  </span>
+                  <span className="tabular-nums">−{formatPrice(order.discount.amount)}</span>
+                </div>
+              </div>
+            )}
             <div className="mt-3 flex justify-between border-t border-line pt-3 text-[15px] font-semibold">
               <span>Итого</span>
               <span className="tabular-nums">{formatPrice(order.subtotal)}</span>

@@ -9,12 +9,14 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { cn, formatPrice, imageUrl } from "@/lib/format";
 import { FREE_DELIVERY_FROM } from "@/data/categories";
+import { PromoField } from "./PromoField";
 import { placeOrder } from "@/lib/actions/orders";
 import type { SiteUser } from "@/lib/types";
 
 export function CheckoutForm({ user, online }: { user: SiteUser | null; online: { halyk: boolean; kaspi: boolean } }) {
   const { t, href, locale } = useI18n();
-  const { items, subtotal, clear, hydrated } = useCart();
+  const { items, subtotal, discount, total, promo, setPromo, clear, hydrated } = useCart();
+  const [promoGone, setPromoGone] = useState(false);
   const router = useRouter();
   const [delivery, setDelivery] = useState(t.checkout.deliveryMethods[0].id);
   const [payment, setPayment] = useState(online.halyk ? "halyk" : online.kaspi ? "kaspi_online" : "kaspi");
@@ -52,10 +54,15 @@ export function CheckoutForm({ user, online }: { user: SiteUser | null; online: 
       payment,
       locale,
       customer: { name: get("name"), phone: get("phone"), email: get("email"), city: get("city"), address: get("address"), comment: get("comment") },
+      promoCode: promo?.code,
     })
       .then((res) => {
         if (!res.ok) {
-          setError(true);
+          if (res.error === "promo") {
+            // The code stopped working between the cart and the order: drop it and show the new total.
+            setPromo(null);
+            setPromoGone(true);
+          } else setError(true);
           setBusy(false);
           return;
         }
@@ -147,18 +154,30 @@ export function CheckoutForm({ user, online }: { user: SiteUser | null; online: 
                 <span className="text-muted">{t.cart.subtotal}</span>
                 <span className="tabular-nums">{formatPrice(subtotal)}</span>
               </div>
+              {discount > 0 && promo && (
+                <div className="flex justify-between">
+                  <span className="text-muted">
+                    {t.cart.promoDiscount} {promo.code}
+                  </span>
+                  <span className="tabular-nums font-semibold text-rose-700">−{formatPrice(discount)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted">{t.cart.delivery}</span>
                 <span className={free ? "font-semibold text-rose-700" : "text-muted"}>{free ? t.cart.deliveryFree : t.cart.deliveryCalc}</span>
               </div>
               <div className="flex justify-between pt-2 text-[17px] font-semibold">
                 <span>{t.cart.total}</span>
-                <span className="tabular-nums">{formatPrice(subtotal)}</span>
+                <span className="tabular-nums">{formatPrice(total)}</span>
               </div>
             </div>
+            <div className="mt-4">
+              <PromoField />
+            </div>
+            {promoGone && <p className="mt-4 rounded-xl bg-cream px-4 py-2 text-[13px] text-ink">{t.cart.promoGone}</p>}
             {error && <p className="mt-4 rounded-xl bg-rose-100 px-4 py-2 text-[13px] text-rose-800">{t.checkout.required}</p>}
             <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
-              <Lock className="h-4 w-4" /> {payment === "halyk" || payment === "kaspi_online" ? t.checkout.pay : t.checkout.place} · {formatPrice(subtotal)}
+              <Lock className="h-4 w-4" /> {payment === "halyk" || payment === "kaspi_online" ? t.checkout.pay : t.checkout.place} · {formatPrice(total)}
             </button>
             <p className="mt-3 text-[11px] leading-relaxed text-muted">{t.checkout.agree}</p>
           </div>
