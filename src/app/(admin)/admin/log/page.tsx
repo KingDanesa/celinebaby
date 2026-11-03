@@ -10,6 +10,17 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Журнал" };
 
 const PAGE = 100;
+const TZ = "Asia/Almaty";
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+/** Calendar day in Astana time as YYYY-MM-DD. */
+const dayKey = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: TZ });
+const shiftDays = (key: string, n: number) => {
+  const d = new Date(`${key}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const dayTitle = (key: string) =>
+  new Date(`${key}T12:00:00Z`).toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
 const TEXT: Record<AuditAction, string> = {
   login: "вошёл в админку",
@@ -51,16 +62,21 @@ function targetHref(e: AuditEntry): string | null {
   return null;
 }
 
-export default async function LogPage({ searchParams }: { searchParams: Promise<{ who?: string; group?: string; before?: string }> }) {
+export default async function LogPage({ searchParams }: { searchParams: Promise<{ who?: string; group?: string; before?: string; from?: string; to?: string }> }) {
   await requireOwner();
   const sp = await searchParams;
   const who = sp.who || undefined;
   const group = sp.group && AUDIT_GROUPS[sp.group] ? sp.group : undefined;
   const before = Number(sp.before) || undefined;
-  const [entries, people] = await Promise.all([listAudit({ email: who, group, before, limit: PAGE }), auditEmails()]);
+  let from = sp.from && DATE_RE.test(sp.from) ? sp.from : undefined;
+  let to = sp.to && DATE_RE.test(sp.to) ? sp.to : undefined;
+  if (from && to && from > to) [from, to] = [to, from];
+  const [entries, people] = await Promise.all([listAudit({ email: who, group, before, from, to, limit: PAGE }), auditEmails()]);
+  const today = dayKey(new Date());
+  const yesterday = shiftDays(today, -1);
   const qs = (patch: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
-    const merged = { who, group, ...patch };
+    const merged = { who, group, from, to, ...patch };
     for (const [k, v] of Object.entries(merged)) if (v) p.set(k, v);
     const s = p.toString();
     return s ? `/admin/log?${s}` : "/admin/log";
@@ -75,6 +91,45 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
         <Card className="mb-6">
           <p className="text-[14px] text-ink-soft">Журнал работает на боевом сервере.</p>
         </Card>
+      )}
+
+      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4">
+        <form action="/admin/log" className="flex flex-wrap items-end gap-3">
+          {who && <input type="hidden" name="who" value={who} />}
+          {group && <input type="hidden" name="group" value={group} />}
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">С даты</span>
+            <input type="date" name="from" defaultValue={from} max={today} className="input py-2" />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">По дату</span>
+            <input type="date" name="to" defaultValue={to} max={today} className="input py-2" />
+          </label>
+          <button type="submit" className="btn-primary px-5 py-2.5">
+            Показать
+          </button>
+        </form>
+        <div className="flex flex-wrap gap-2">
+          <Link href={qs({ from: today, to: today, before: undefined })} className={chip(from === today && to === today)}>
+            Сегодня
+          </Link>
+          <Link href={qs({ from: yesterday, to: yesterday, before: undefined })} className={chip(from === yesterday && to === yesterday)}>
+            Вчера
+          </Link>
+          <Link href={qs({ from: shiftDays(today, -6), to: today, before: undefined })} className={chip(from === shiftDays(today, -6) && to === today)}>
+            7 дней
+          </Link>
+          {(from || to) && (
+            <Link href={qs({ from: undefined, to: undefined, before: undefined })} className={chip(false)}>
+              За всё время
+            </Link>
+          )}
+        </div>
+      </div>
+      {(from || to) && (
+        <p className="mb-3 text-[13px] text-ink-soft">
+          Период: {from ? dayTitle(from) : "с начала"} — {to ? dayTitle(to) : "сегодня"}
+        </p>
       )}
 
       <div className="mb-3 flex flex-wrap gap-2">
@@ -102,12 +157,16 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
 
       <div className="overflow-hidden rounded-2xl border border-line bg-white">
         <ul className="divide-y divide-line">
-          {entries.map((e) => {
+          {entries.map((e, i) => {
             const href = targetHref(e);
+            const day = dayKey(new Date(e.at));
+            const newDay = i === 0 || dayKey(new Date(entries[i - 1].at)) !== day;
             return (
-              <li key={e.id} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:gap-4">
-                <time className="shrink-0 text-[12px] tabular-nums text-muted sm:w-36 sm:pt-0.5">
-                  {new Date(e.at).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Almaty" })}
+              <li key={e.id} className="flex flex-col">
+                {newDay && <p className="bg-sand px-4 py-2 text-[12px] font-semibold uppercase tracking-wider text-ink-soft">{dayTitle(day)}</p>}
+                <div className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:gap-4">
+                <time className="shrink-0 text-[12px] tabular-nums text-muted sm:w-14 sm:pt-0.5">
+                  {new Date(e.at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: TZ })}
                 </time>
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px]">
@@ -131,10 +190,11 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
                   )}
                 </div>
                 {e.ip && <span className="shrink-0 text-[11px] text-muted sm:pt-1">IP {e.ip}</span>}
+                </div>
               </li>
             );
           })}
-          {entries.length === 0 && <li className="px-4 py-12 text-center text-[14px] text-muted">Записей пока нет</li>}
+          {entries.length === 0 && <li className="px-4 py-12 text-center text-[14px] text-muted">{from || to ? "За этот период записей нет" : "Записей пока нет"}</li>}
         </ul>
       </div>
       {entries.length === PAGE && (

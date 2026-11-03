@@ -85,7 +85,8 @@ export async function audit(action: AuditAction, input: AuditInput = {}): Promis
 
 type Row = { id: string | number; at: Date; admin_id: string | null; email: string; action: AuditAction; target: string | null; label: string | null; details: string[]; ip: string | null };
 
-export async function listAudit(opts: { email?: string; group?: string; before?: number; limit?: number }): Promise<AuditEntry[]> {
+/** Dates are calendar days in Astana time, "YYYY-MM-DD"; both ends included. */
+export async function listAudit(opts: { email?: string; group?: string; before?: number; limit?: number; from?: string; to?: string }): Promise<AuditEntry[]> {
   if (!dbEnabled()) return [];
   const actions = opts.group && AUDIT_GROUPS[opts.group] ? AUDIT_GROUPS[opts.group].actions : null;
   const limit = Math.min(opts.limit ?? 100, 500);
@@ -94,7 +95,9 @@ export async function listAudit(opts: { email?: string; group?: string; before?:
      where (${opts.email ?? null}::text is null or email = ${opts.email ?? null})
        and (${actions === null} or action = any(${actions ?? []}))
        and (${opts.before ?? null}::bigint is null or id < ${opts.before ?? null})
-     order by id desc
+       and (${opts.from ?? null}::date is null or at >= (${opts.from ?? null}::date)::timestamp at time zone 'Asia/Almaty')
+       and (${opts.to ?? null}::date is null or at < ((${opts.to ?? null}::date) + 1)::timestamp at time zone 'Asia/Almaty')
+     order by at desc, id desc
      limit ${limit}`;
   return rows.map((r) => ({
     id: Number(r.id),
