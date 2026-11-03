@@ -176,7 +176,7 @@ const ru = {
     address: "Адрес",
     comment: "Комментарий к заказу",
     deliveryMethods: [
-      { id: "courier", title: "Курьер по Астане", text: "Яндекс / InDrive, 1 день", price: "от 2 000 ₸" },
+      { id: "courier", title: "Курьер по Астане", text: "Яндекс / InDrive, 1 день", price: "от 990 ₸" },
       { id: "kz", title: "По Казахстану", text: "РИКА, KAZ Почта, 2–7 дней", price: "от 1 500 ₸" },
       { id: "world", title: "По миру", text: "CDEK, рассчитывается индивидуально", price: "по запросу" },
     ],

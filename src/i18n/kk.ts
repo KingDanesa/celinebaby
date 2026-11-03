@@ -178,7 +178,7 @@ const kk: Dictionary = {
     address: "Мекенжай",
     comment: "Тапсырысқа түсініктеме",
     deliveryMethods: [
-      { id: "courier", title: "Астана бойынша курьер", text: "Яндекс / InDrive, 1 күн", price: "2 000 ₸-ден" },
+      { id: "courier", title: "Астана бойынша курьер", text: "Яндекс / InDrive, 1 күн", price: "990 ₸-ден" },
       { id: "kz", title: "Қазақстан бойынша", text: "РИКА, KAZ Пошта, 2–7 күн", price: "1 500 ₸-ден" },
       { id: "world", title: "Әлем бойынша", text: "CDEK, жеке есептеледі", price: "сұраныс бойынша" },
     ],
