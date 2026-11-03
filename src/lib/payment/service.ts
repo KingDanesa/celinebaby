@@ -97,8 +97,17 @@ async function verifiedStatus(a: PaymentAttempt, allowReject: boolean): Promise<
     return { ok: false };
   }
   const code = String(res.data.resultCode ?? "missing");
-  if (code === "101" && allowReject) return { ok: true, status: "REJECT", tx: null };
   const tx = res.data.transaction;
+  // 101 = the bank declined this invoice (e.g. 3-D Secure failed). The answer carries the transaction:
+  // record it as a decline, so the customer is offered a new attempt instead of "checking payment".
+  if (code === "101") {
+    const sameInvoice = String(tx?.invoiceID ?? tx?.invoiceId ?? "") === a.invoiceId;
+    if (sameInvoice || allowReject) {
+      const named = String(tx?.statusName ?? "").toUpperCase() as HalykState;
+      log(`declined, invoice ${a.invoiceId}, ${tx?.reason ?? ""} ${tx?.reasonCode ?? ""}`.trim());
+      return { ok: true, status: FAILED.includes(named) ? named : "REJECT", tx: sameInvoice ? (tx ?? null) : null };
+    }
+  }
   if (code !== "100" || !tx) {
     if (code !== "102") log(`status check rejected, invoice ${a.invoiceId}, resultCode ${code}`);
     return { ok: false };
@@ -129,7 +138,8 @@ async function applyStatus(orderId: string, invoiceId: string, status: HalykStat
     if (tx?.id) a.halykId = String(tx.id);
     if (tx?.reference) a.reference = String(tx.reference);
     if (tx?.cardMask) a.cardMask = String(tx.cardMask);
-    a.lastError = undefined;
+    // Keep the bank's reason for a decline, e.g. "Authentication failed (473)", for the admin.
+    a.lastError = FAILED.includes(status) && tx?.reason ? `${tx.reason}${tx.reasonCode ? ` (${tx.reasonCode})` : ""}`.slice(0, 255) : undefined;
     return true;
   });
   return { ok: true as const, status };
