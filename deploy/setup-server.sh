@@ -21,7 +21,7 @@ say "System packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get upgrade -y
-apt-get install -y curl git nginx postgresql postgresql-contrib certbot python3-certbot-nginx dnsutils ufw unattended-upgrades rsync python3
+apt-get install -y curl git nginx postgresql postgresql-contrib certbot python3-certbot-nginx dnsutils ffmpeg ufw unattended-upgrades rsync python3
 timedatectl set-timezone Asia/Almaty || true
 
 say "Node.js 24 LTS"

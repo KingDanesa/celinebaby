@@ -20,6 +20,7 @@ const TYPES: Record<string, string> = {
   ".gif": "image/gif",
   ".svg": "image/svg+xml",
   ".avif": "image/avif",
+  ".mp4": "video/mp4",
 };
 
 export function contentTypeFor(file: string): string | null {

@@ -4,7 +4,10 @@ import { ArrowUpRight, Gift, Leaf, ShieldCheck, Truck } from "lucide-react";
 import type { Dictionary } from "@/i18n";
 import type { BlogPost } from "@/lib/types";
 import { imageUrl, cn } from "@/lib/format";
-import { homeTiles, STORE } from "@/data/categories";
+import { homeTiles } from "@/data/categories";
+import { pick, type HomeContent } from "@/lib/home-types";
+import { BlockMedia } from "./BlockMedia";
+import { linkTo } from "./Hero";
 import { Monogram } from "@/components/ui/Logo";
 import { Reveal } from "@/components/ui/Reveal";
 import { Parallax } from "@/components/ui/Parallax";
@@ -15,21 +18,21 @@ const toneBg: Record<string, string> = { pink: "bg-pink", blue: "bg-blue", cream
 const toneTint: Record<string, string> = { pink: "bg-pink-deep/35", blue: "bg-blue-deep/35", cream: "bg-cream/40", mint: "bg-mint/40" };
 
 /** Four category tiles with the cover photos. */
-export function CategoryTiles({ t, href, className }: { t: Dictionary; href: H; className?: string }) {
+export function CategoryTiles({ home, locale, href, className }: { home: HomeContent; locale: string; href: H; className?: string }) {
   return (
     <section className={cn("grid grid-cols-2 lg:grid-cols-4", className)}>
-      {homeTiles.map((tile, i) => {
-        const to = tile.categories.length === 1 ? `/catalog/${tile.categories[0]}` : `/catalog?category=${tile.categories.join(",")}`;
+      {homeTiles.map((t, i) => {
+        const tile = home.tiles[t.key];
         return (
-          <Reveal key={tile.key} delay={i * 90} variant="fade" className={cn("relative aspect-[4/5] overflow-hidden sm:aspect-square lg:aspect-[4/5] xl:aspect-square", toneBg[tile.tone])}>
-            <Link href={href(to)} className="group absolute inset-0 block overflow-hidden">
+          <Reveal key={t.key} delay={i * 90} variant="fade" className={cn("relative aspect-[4/5] overflow-hidden sm:aspect-square lg:aspect-[4/5] xl:aspect-square", toneBg[t.tone])}>
+            <Link href={linkTo(tile.link, href)} className="group absolute inset-0 block overflow-hidden">
               <Parallax strength={0.05}>
-                <Image src={tile.image} alt="" fill sizes="(max-width: 1024px) 50vw, 25vw" className="object-cover object-top" />
+                <BlockMedia tile={tile} sizes="(max-width: 1024px) 50vw, 25vw" />
               </Parallax>
-              <div className={cn("absolute inset-0 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-50", toneTint[tile.tone])} />
+              <div className={cn("absolute inset-0 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-50", toneTint[t.tone])} />
               <div className="absolute inset-0 bg-gradient-to-t from-ink/45 via-transparent to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-5 text-center text-white [text-shadow:0_2px_20px_rgba(43,14,20,0.45)] transition-transform duration-500 ease-soft group-hover:-translate-y-1 sm:p-7">
-                <h3 className="display-caps text-[20px] leading-tight sm:text-[24px]">{t.home.tiles[tile.key]}</h3>
+                <h3 className="display-caps text-[20px] leading-tight sm:text-[24px]">{pick(tile.title, locale)}</h3>
               </div>
             </Link>
           </Reveal>
@@ -40,52 +43,58 @@ export function CategoryTiles({ t, href, className }: { t: Dictionary; href: H; 
 }
 
 /** "Наборы на выписку" photo tile + "Магазин в Астане" info tile. */
-export function DischargeTile({ t, href }: { t: Dictionary; href: H }) {
+export function DischargeTile({ home, locale, href }: { home: HomeContent; locale: string; href: H }) {
+  const tile = home.tiles.discharge;
+  const sub = pick(tile.sub, locale);
   return (
     <Reveal variant="fade" className="relative aspect-[4/5] overflow-hidden bg-pink sm:aspect-[16/10] lg:aspect-auto lg:min-h-[520px]">
-      <Link href={href("/catalog/nabory-na-vypisku")} className="group absolute inset-0 block overflow-hidden">
+      <Link href={linkTo(tile.link, href)} className="group absolute inset-0 block overflow-hidden">
         <Parallax strength={0.06}>
-          <Image src="/img/covers/vypiska.jpg" alt="" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
+          <BlockMedia tile={tile} sizes="(max-width: 1024px) 100vw, 50vw" />
         </Parallax>
         <div className="absolute inset-0 bg-pink-deep/30 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-55" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white [text-shadow:0_2px_30px_rgba(43,14,20,0.45)]">
-          <h2 className="display-caps max-w-md px-6 text-[34px] sm:text-[clamp(28px,4.2vw,52px)]">{t.home.dischargeTitle}</h2>
-          <p className="mt-3 text-[15px] font-medium sm:text-[18px]">{t.home.dischargeSub}</p>
+          <h2 className="display-caps max-w-md px-6 text-[34px] sm:text-[clamp(28px,4.2vw,52px)]">{pick(tile.title, locale)}</h2>
+          {sub && <p className="mt-3 text-[15px] font-medium sm:text-[18px]">{sub}</p>}
         </div>
       </Link>
     </Reveal>
   );
 }
 
-export function StoreTile({ t }: { t: Dictionary }) {
+export function StoreTile({ home, locale }: { home: HomeContent; locale: string }) {
+  const s = home.store;
+  const hours = pick(s.hours, locale);
   return (
     <section className="flex flex-col items-center justify-center bg-blue px-6 py-16 text-center text-ink sm:py-20 lg:min-h-[520px]">
       <Reveal variant="up" className="flex flex-col items-center">
         <Monogram size={44} className="opacity-70" />
-        <h2 className="display-caps mt-3 text-[28px] sm:text-[clamp(24px,3.2vw,40px)]">{t.home.storeTitle}</h2>
-        <p className="mt-4 text-[13px] font-semibold uppercase tracking-[0.12em]">{t.home.storeAddress}</p>
-        <p className="mt-1.5 text-[13px] uppercase tracking-[0.12em] text-ink-soft">{t.home.storeHours}</p>
-        <a href={STORE.map} target="_blank" rel="noreferrer" className="btn-outline mt-7 px-6 py-2.5 text-[11px]">
-          {t.home.storeCta} <ArrowUpRight className="h-3.5 w-3.5" />
-        </a>
+        <h2 className="display-caps mt-3 text-[28px] sm:text-[clamp(24px,3.2vw,40px)]">{pick(s.title, locale)}</h2>
+        <p className="mt-4 text-[13px] font-semibold uppercase tracking-[0.12em]">{pick(s.address, locale)}</p>
+        {hours && <p className="mt-1.5 text-[13px] uppercase tracking-[0.12em] text-ink-soft">{hours}</p>}
+        {s.map && (
+          <a href={s.map} target="_blank" rel="noreferrer" className="btn-outline mt-7 px-6 py-2.5 text-[11px]">
+            {pick(s.cta, locale)} <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
+        )}
       </Reveal>
     </section>
   );
 }
 
-export function Benefits({ t }: { t: Dictionary }) {
+export function Benefits({ home, locale }: { home: HomeContent; locale: string }) {
   const icons = [ShieldCheck, Truck, Leaf, Gift];
   return (
     <section className="container-x">
       <div className="grid grid-cols-2 gap-x-6 gap-y-8 border-b border-line py-12 lg:grid-cols-4 lg:py-16">
-        {t.home.benefits.map((b, i) => {
-          const Icon = icons[i];
+        {home.benefits.map((b, i) => {
+          const Icon = icons[i % icons.length];
           return (
-            <Reveal key={b.title} delay={i * 90}>
+            <Reveal key={i} delay={i * 90}>
               <Icon className="mb-3 h-5 w-5 text-rose-600" />
-              <p className="text-[12px] font-bold uppercase tracking-[0.12em]">{b.title}</p>
-              <p className="mt-1 text-[13px] text-ink-soft">{b.text}</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em]">{pick(b.title, locale)}</p>
+              <p className="mt-1 text-[13px] text-ink-soft">{pick(b.text, locale)}</p>
             </Reveal>
           );
         })}

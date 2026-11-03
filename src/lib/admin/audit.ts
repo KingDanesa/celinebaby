@@ -30,7 +30,9 @@ export type AuditAction =
   | "promo_created"
   | "promo_updated"
   | "promo_deleted"
-  | "announcement_updated";
+  | "announcement_updated"
+  | "home_updated"
+  | "home_reset";
 
 export const AUDIT_GROUPS: Record<string, { label: string; actions: AuditAction[] }> = {
   access: { label: "Входы и доступ", actions: ["login", "login_failed", "logout", "password_changed", "password_reset", "staff_invited", "invite_resent", "staff_removed"] },
@@ -39,7 +41,7 @@ export const AUDIT_GROUPS: Record<string, { label: string; actions: AuditAction[
   requests: { label: "Заявки", actions: ["request_status"] },
   blog: { label: "Блог", actions: ["blog_created", "blog_updated", "blog_deleted"] },
   promos: { label: "Промокоды", actions: ["promo_created", "promo_updated", "promo_deleted"] },
-  site: { label: "Объявление", actions: ["announcement_updated"] },
+  site: { label: "Сайт", actions: ["announcement_updated", "home_updated", "home_reset"] },
 };
 
 export interface AuditEntry {

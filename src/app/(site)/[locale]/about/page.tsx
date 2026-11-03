@@ -4,6 +4,7 @@ import { pageContext } from "@/lib/page";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Benefits } from "@/components/home/Sections";
 import { Monogram } from "@/components/ui/Logo";
+import { getHome } from "@/lib/home";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { t } = await pageContext(params);
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { t, href } = await pageContext(params);
+  const { t, href, locale } = await pageContext(params);
   const a = t.pages.about;
   // Photos of the shop in Astana: the hall, the entrance (raised in the middle) and the house-shaped shelves.
   const gallery = ["/img/about-1.jpg", "/img/about-2.jpg", "/img/about-3.jpg"];
@@ -45,7 +46,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
         </div>
       </div>
 
-      <Benefits t={t} />
+      <Benefits home={await getHome()} locale={locale} />
 
       <section className="container-x mt-20">
         <div className="relative overflow-hidden rounded-[32px] bg-rose-50 px-8 py-12 sm:px-14 sm:py-16">

@@ -4,23 +4,13 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "./auth";
 import { audit } from "./audit";
 import { dbEnabled } from "@/lib/db";
+import { normalizeLink } from "@/lib/links";
 import { MAX_ITEMS, getAnnouncement, saveAnnouncement, type Announcement, type AnnouncementItem } from "@/lib/announcement";
 
 export type AnnouncementFormState = { ok?: string; error?: string };
 
 const MAX = 80;
 const clean = (v: FormDataEntryValue | null | undefined) => String(v ?? "").replace(/\s+/g, " ").trim();
-
-/** "/catalog/x", "https://celinebaby.kz/ru/catalog/x" → "/catalog/x"; other https links stay as they are. */
-function normalizeLink(raw: string): string | null {
-  if (!raw) return "";
-  let s = raw.trim();
-  const own = s.match(/^(?:https?:\/\/)?(?:www\.)?celinebaby\.kz(\/.*)?$/i);
-  if (own) s = own[1] || "/";
-  if (s.startsWith("/")) return /^\/[^\s:]*$/.test(s) ? s.replace(/^\/(ru|kk)(?=\/|$)/, "") || "/" : null;
-  if (/^https:\/\/[^\s]+$/i.test(s) && s.indexOf("://", 8) < 0) return s;
-  return null;
-}
 
 const itemKey = (it: AnnouncementItem) => `${it.ru}|${it.kk}|${it.link}`;
 

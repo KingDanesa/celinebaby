@@ -18,8 +18,26 @@ export async function serveMedia(folder: "image" | "uploads", parts: string[], r
       "Last-Modified": stat.mtime.toUTCString(),
     };
     if (req.headers.get("if-none-match") === etag) return new Response(null, { status: 304, headers });
+    // Safari plays a video only when the server answers byte ranges.
+    const range = req.headers.get("range")?.match(/^bytes=(\d*)-(\d*)$/);
+    if (range && (range[1] || range[2])) {
+      const start = range[1] ? Number(range[1]) : Math.max(0, stat.size - Number(range[2]));
+      const end = range[1] && range[2] ? Math.min(Number(range[2]), stat.size - 1) : stat.size - 1;
+      if (start > end || start >= stat.size) return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${stat.size}` } });
+      const fh = await fs.open(file, "r");
+      try {
+        const chunk = new Uint8Array(end - start + 1);
+        await fh.read(chunk, 0, chunk.length, start);
+        return new Response(chunk, {
+          status: 206,
+          headers: { ...headers, "Accept-Ranges": "bytes", "Content-Range": `bytes ${start}-${end}/${stat.size}`, "Content-Length": String(chunk.length) },
+        });
+      } finally {
+        await fh.close();
+      }
+    }
     const body = await fs.readFile(file);
-    return new Response(new Uint8Array(body), { headers: { ...headers, "Content-Length": String(body.length) } });
+    return new Response(new Uint8Array(body), { headers: { ...headers, "Accept-Ranges": "bytes", "Content-Length": String(body.length) } });
   } catch {
     return new Response("Not found", { status: 404 });
   }
