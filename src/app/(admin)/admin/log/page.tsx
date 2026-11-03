@@ -44,6 +44,7 @@ const TEXT: Record<AuditAction, string> = {
   promo_created: "создал промокод",
   promo_updated: "изменил промокод",
   promo_deleted: "удалил промокод",
+  announcement_updated: "изменил объявление над шапкой",
 };
 
 const TONE: Partial<Record<AuditAction, string>> = {
@@ -65,6 +66,7 @@ function targetHref(e: AuditEntry): string | null {
   if (e.action === "request_status") return "/admin/requests";
   if (e.action.startsWith("blog_") && e.action !== "blog_deleted") return `/admin/blog/${e.target}`;
   if (e.action === "promo_created" || e.action === "promo_updated") return "/admin/promos";
+  if (e.action === "announcement_updated") return "/admin/announcement";
   return null;
 }
 
