@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "./auth";
+import { audit, diffLines } from "./audit";
+import { formatPrice } from "@/lib/format";
 import { getStore, mutateOrder, type OrderStatus } from "@/lib/store";
 import { sendStatusEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/payment/service";
@@ -49,8 +51,34 @@ function textToHtml(text: string): string {
 
 export type SaveResult = { ok: true; id: number } | { ok: false; error: string };
 
+const ORDER_STATUS_RU: Record<string, string> = { new: "Новый", paid: "Оплачен", shipped: "Отправлен", done: "Выполнен", cancelled: "Отменён" };
+const money = (v: unknown) => (typeof v === "number" && v > 0 ? formatPrice(v) : "—");
+const count = (v: unknown) => String(Array.isArray(v) ? v.length : 0);
+const PRODUCT_FIELDS: [string, string, ((v: unknown) => string)?][] = [
+  ["name", "Название"],
+  ["nameKk", "Название (каз.)"],
+  ["sku", "Артикул"],
+  ["price", "Цена", money],
+  ["oldPrice", "Старая цена", money],
+  ["category", "Категория"],
+  ["gender", "Для кого"],
+  ["ages", "Возраст"],
+  ["brand", "Бренд"],
+  ["sizes", "Размеры"],
+  ["colors", "Цвета"],
+  ["images", "Фото, шт.", count],
+  ["description", "Описание", () => "изменено"],
+  ["composition", "Состав"],
+  ["care", "Уход"],
+  ["lining", "Подкладка"],
+  ["tags", "Метки"],
+  ["showInNew", "В новинках"],
+  ["inStock", "В наличии"],
+  ["status", "Публикация", (v) => (v === "draft" ? "черновик" : "на сайте")],
+];
+
 export async function saveProductAction(payload: string): Promise<SaveResult> {
-  await requireAdmin();
+  const me = await requireAdmin();
   let input: ProductInput;
   try {
     input = JSON.parse(payload) as ProductInput;
@@ -108,16 +136,25 @@ export async function saveProductAction(payload: string): Promise<SaveResult> {
   };
 
   await store.saveProduct(product);
+  if (existing) {
+    // Descriptions are compared as plain text: re-saving an imported product only changes its HTML markup.
+    const plain = (p: Product) => ({ ...p, colors: p.colors.map((c) => c.name), description: p.description.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim() });
+    const changes = diffLines(plain(existing) as unknown as Record<string, unknown>, plain(product) as unknown as Record<string, unknown>, PRODUCT_FIELDS);
+    if (changes.length) await audit("product_updated", { admin: me, target: id, label: name, details: changes });
+  } else {
+    await audit("product_created", { admin: me, target: id, label: name, details: [`Цена: ${formatPrice(product.price)}`, product.status === "draft" ? "Сохранён черновиком" : "Сразу на сайте"] });
+  }
   invalidateProducts();
   revalidatePath("/", "layout");
   return { ok: true, id };
 }
 
 export async function deleteProductAction(id: number) {
-  await requireAdmin();
+  const me = await requireAdmin();
   const store = await getStore();
   const p = await store.getProduct(id);
   if (p) {
+    await audit("product_deleted", { admin: me, target: id, label: p.name, details: [`Цена: ${formatPrice(p.price)}`, `Фото: ${p.images.length} шт.`] });
     for (const url of p.images) {
       if (url.startsWith("/uploads/") || url.includes("/storage/v1/")) await store.deleteImage(url).catch(() => {});
     }
@@ -129,11 +166,13 @@ export async function deleteProductAction(id: number) {
 }
 
 export async function toggleProductStatusAction(id: number) {
-  await requireAdmin();
+  const me = await requireAdmin();
   const store = await getStore();
   const p = await store.getProduct(id);
   if (!p) return;
-  await store.saveProduct({ ...p, status: p.status === "draft" ? "active" : "draft", updatedAt: new Date().toISOString() });
+  const next = p.status === "draft" ? "active" : "draft";
+  await store.saveProduct({ ...p, status: next, updatedAt: new Date().toISOString() });
+  await audit(next === "active" ? "product_published" : "product_hidden", { admin: me, target: id, label: p.name });
   invalidateProducts();
   revalidatePath("/", "layout");
 }
@@ -143,9 +182,17 @@ export async function toggleProductStatusAction(id: number) {
 const ORDER_STATUSES: OrderStatus[] = ["new", "paid", "shipped", "done", "cancelled"];
 
 export async function setOrderStatusAction(id: string, status: OrderStatus) {
-  await requireAdmin();
+  const me = await requireAdmin();
   if (!ORDER_STATUSES.includes(status)) return;
   const res = await mutateOrder(id, (o) => (o.status === status ? null : { ...o, status }));
-  if (res?.changed) sendStatusEmail(res.after, siteUrl()).catch((e) => console.error("[email]", e));
+  if (res?.changed) {
+    sendStatusEmail(res.after, siteUrl()).catch((e) => console.error("[email]", e));
+    await audit("order_status", {
+      admin: me,
+      target: id,
+      label: `${res.after.customer.name}, ${formatPrice(res.after.subtotal)}`,
+      details: [`Статус: ${ORDER_STATUS_RU[res.before.status] ?? res.before.status} → ${ORDER_STATUS_RU[status] ?? status}`],
+    });
+  }
   revalidatePath("/admin/orders", "layout");
 }

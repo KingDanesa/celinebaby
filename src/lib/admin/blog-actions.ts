@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "./auth";
+import { audit } from "./audit";
 import { blogEditable, deleteBlogRecord, getBlogRecord, saveBlogRecord, slugTaken } from "@/lib/blog";
 import { slugify } from "@/lib/catalog";
 import type { BlogRecord } from "@/lib/types";
@@ -13,7 +14,7 @@ export type BlogSaveResult = { ok: true; slug: string } | { ok: false; error: st
 const clip = (s: unknown, n: number) => String(s ?? "").trim().slice(0, n);
 
 export async function saveBlogPostAction(payload: string): Promise<BlogSaveResult> {
-  await requireAdmin();
+  const me = await requireAdmin();
   if (!blogEditable()) return { ok: false, error: "На демо-версии блог не редактируется. Это работает на боевом сервере." };
   let input: BlogInput;
   try {
@@ -44,15 +45,32 @@ export async function saveBlogPostAction(payload: string): Promise<BlogSaveResul
     excerptKk: clip(input.excerptKk, 400) || undefined,
     bodyKk: String(input.bodyKk ?? "").trim().slice(0, 100_000) || undefined,
   };
+  const before = input.originalSlug ? await getBlogRecord(input.originalSlug) : null;
   await saveBlogRecord(record, input.originalSlug);
+  const changes: string[] = [];
+  if (before) {
+    if (before.title !== record.title) changes.push(`Заголовок: ${before.title} → ${record.title}`);
+    if (before.body !== record.body) changes.push("Текст изменён");
+    if (before.image !== record.image) changes.push("Обложка заменена");
+    if ((before.bodyKk ?? "") !== (record.bodyKk ?? "") || (before.titleKk ?? "") !== (record.titleKk ?? "")) changes.push("Казахский текст изменён");
+    if (before.status !== record.status) changes.push(record.status === "draft" ? "Скрыта в черновики" : "Опубликована");
+    if (before.slug !== record.slug) changes.push(`Адрес: ${before.slug} → ${record.slug}`);
+  }
+  if (!before || changes.length) {
+    await audit(before ? "blog_updated" : "blog_created", { admin: me, target: slug, label: title, details: before ? changes : [record.status === "draft" ? "Черновик" : "Опубликована"] });
+  }
   revalidatePath("/", "layout");
   return { ok: true, slug };
 }
 
 export async function deleteBlogPostAction(slug: string) {
-  await requireAdmin();
+  const me = await requireAdmin();
   if (!blogEditable()) return;
-  if (await getBlogRecord(slug)) await deleteBlogRecord(slug);
+  const post = await getBlogRecord(slug);
+  if (post) {
+    await deleteBlogRecord(slug);
+    await audit("blog_deleted", { admin: me, target: slug, label: post.title });
+  }
   revalidatePath("/", "layout");
   redirect("/admin/blog");
 }

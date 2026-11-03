@@ -53,7 +53,7 @@ export const currentAdmin = cache(async (): Promise<AdminUser | null> => {
     return adminFromSession(value).catch(() => null);
   }
   return (await verifySessionValue(value))
-    ? { id: "shared", email: "", name: "Администратор", createdAt: "", lastLoginAt: null, pending: false }
+    ? { id: "shared", email: "", name: "Администратор", createdAt: "", lastLoginAt: null, pending: false, role: "owner" }
     : null;
 });
 
@@ -64,6 +64,13 @@ export async function isAdmin(): Promise<boolean> {
 export async function requireAdmin(): Promise<AdminUser> {
   const admin = await currentAdmin();
   if (!admin) redirect("/admin/login");
+  return admin;
+}
+
+/** Pages and actions only the owner may use (staff accounts, activity log). */
+export async function requireOwner(): Promise<AdminUser> {
+  const admin = await requireAdmin();
+  if (admin.role !== "owner") redirect("/admin");
   return admin;
 }
 

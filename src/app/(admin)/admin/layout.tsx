@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <body className="min-h-full bg-[#f6f3f1] text-ink [--font-comfortaa:var(--font-manrope)]">
         {admin ? (
           <div className="flex min-h-screen">
-            <AdminSidebar who={admin.email || admin.name} />
+            <AdminSidebar who={admin.email || admin.name} owner={admin.role === "owner"} />
             <div className="flex min-w-0 flex-1 flex-col">
               <main className="flex-1 px-5 py-6 lg:px-10 lg:py-8">{children}</main>
             </div>

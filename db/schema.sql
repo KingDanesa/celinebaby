@@ -106,3 +106,24 @@ create table if not exists requests (
   created_at  timestamptz not null default now()
 );
 create index if not exists requests_created_idx on requests (created_at desc);
+
+-- Admin roles: the owner manages staff accounts and reads the activity log; staff do everything else.
+alter table admin_users add column if not exists role text not null default 'staff';
+update admin_users set role = 'owner'
+ where id = (select id from admin_users order by created_at limit 1)
+   and not exists (select 1 from admin_users where role = 'owner');
+
+-- Admin activity log (who signed in, what was changed), kept for a year.
+create table if not exists admin_audit (
+  id        bigserial primary key,
+  at        timestamptz not null default now(),
+  admin_id  uuid,
+  email     text not null default '',
+  action    text not null,
+  target    text,
+  label     text,
+  details   jsonb not null default '[]'::jsonb,
+  ip        text
+);
+create index if not exists admin_audit_at_idx on admin_audit (id desc);
+create index if not exists admin_audit_email_idx on admin_audit (email, id desc);

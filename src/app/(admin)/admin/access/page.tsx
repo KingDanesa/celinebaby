@@ -20,18 +20,33 @@ export default async function AccessPage() {
       </>
     );
   }
+  if (me.role !== "owner") {
+    return (
+      <>
+        <PageTitle title="Доступ" subtitle={`Вы вошли как ${me.email} · сотрудник`} />
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card title="Мой пароль">
+            <ChangePasswordForm email={me.email} />
+          </Card>
+          <Card title="Сотрудники">
+            <p className="text-[14px] text-ink-soft">Добавлять и удалять сотрудников может только владелец аккаунта. Если нужен доступ для нового человека, обратитесь к владельцу.</p>
+          </Card>
+        </div>
+      </>
+    );
+  }
   const { listAdmins } = await import("@/lib/admin/users");
   const admins = await listAdmins();
   return (
     <>
-      <PageTitle title="Доступ" subtitle={`Вы вошли как ${me.email}`} />
+      <PageTitle title="Доступ" subtitle={`Вы вошли как ${me.email} · владелец`} />
       <div className="grid gap-6 xl:grid-cols-2">
         <Card title="Мой пароль">
           <ChangePasswordForm email={me.email} />
         </Card>
         <Card title="Добавить сотрудника">
           <p className="mb-4 text-[14px] text-ink-soft">
-            Сотрудник получит письмо со ссылкой и сам придумает пароль. Все сотрудники видят товары, заказы и покупателей и могут добавлять других.
+            Сотрудник получит письмо со ссылкой и сам придумает пароль. Сотрудник работает с товарами, заказами, заявками и блогом, но не может добавлять и удалять других сотрудников и не видит журнал действий.
           </p>
           <InviteForm />
         </Card>
@@ -43,6 +58,9 @@ export default async function AccessPage() {
               <div>
                 <p className="text-[14px] font-semibold">
                   {a.name || a.email}
+                  <span className={a.role === "owner" ? "ml-2 rounded-full bg-burgundy px-2 py-0.5 text-[11px] font-medium text-white" : "ml-2 rounded-full bg-sand px-2 py-0.5 text-[11px] font-medium text-ink-soft"}>
+                    {a.role === "owner" ? "владелец" : "сотрудник"}
+                  </span>
                   {a.id === me.id && <span className="ml-2 rounded-full bg-pink-soft px-2 py-0.5 text-[11px] font-medium text-rose-800">это вы</span>}
                   {a.pending && <span className="ml-2 rounded-full bg-cream px-2 py-0.5 text-[11px] font-medium text-ink-soft">ещё не задал пароль</span>}
                 </p>
@@ -50,7 +68,7 @@ export default async function AccessPage() {
                   {a.email} · последний вход: {date(a.lastLoginAt)}
                 </p>
               </div>
-              <MemberActions id={a.id} email={a.email} pending={a.pending} isMe={a.id === me.id} />
+              {a.role !== "owner" && <MemberActions id={a.id} email={a.email} pending={a.pending} isMe={a.id === me.id} />}
             </li>
           ))}
         </ul>

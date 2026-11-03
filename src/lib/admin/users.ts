@@ -7,6 +7,8 @@ import { burnPasswordCheck, hashPassword, newToken, sha256, verifyPassword } fro
  * Each person signs in with their own e-mail and password; the owner adds and removes people in "Доступ".
  */
 
+export type AdminRole = "owner" | "staff";
+
 export interface AdminUser {
   id: string;
   email: string;
@@ -15,6 +17,8 @@ export interface AdminUser {
   lastLoginAt: string | null;
   /** Invited but has not set a password yet. */
   pending: boolean;
+  /** owner: manages staff accounts and reads the activity log; staff: everything else. */
+  role: AdminRole;
 }
 
 export const ADMIN_SESSION_TTL = 60 * 60 * 24 * 14; // 14 days
@@ -22,7 +26,7 @@ const RESET_TTL_MIN = 60;
 const INVITE_TTL_MIN = 60 * 24 * 3; // 3 days
 const PENDING = "pending-invite";
 
-type Row = { id: string; email: string; name: string; password_hash: string; created_at: Date; last_login_at: Date | null };
+type Row = { id: string; email: string; name: string; password_hash: string; role: string; created_at: Date; last_login_at: Date | null };
 const toAdmin = (r: Row): AdminUser => ({
   id: r.id,
   email: r.email,
@@ -30,9 +34,15 @@ const toAdmin = (r: Row): AdminUser => ({
   createdAt: r.created_at.toISOString(),
   lastLoginAt: r.last_login_at?.toISOString() ?? null,
   pending: r.password_hash === PENDING,
+  role: r.role === "owner" ? "owner" : "staff",
 });
 
 export const normEmail = (e: string) => e.trim().toLowerCase().slice(0, 120);
+
+export async function getAdmin(id: string): Promise<AdminUser | null> {
+  const [row] = await db()<Row[]>`select * from admin_users where id = ${id}`;
+  return row ? toAdmin(row) : null;
+}
 
 export async function countAdmins(): Promise<number> {
   const [row] = await db()`select count(*)::int as n from admin_users`;
@@ -76,7 +86,7 @@ export async function bootstrapFirstAdmin(email: string, password: string): Prom
   const expected = process.env.ADMIN_PASSWORD ?? "";
   if (!expected || password !== expected || (await countAdmins()) > 0) return null;
   const hash = await hashPassword(password);
-  const [row] = await db()`insert into admin_users (email, name, password_hash) values (${normEmail(email)}, '', ${hash}) returning id`;
+  const [row] = await db()`insert into admin_users (email, name, password_hash, role) values (${normEmail(email)}, '', ${hash}, 'owner') returning id`;
   return createSession(row.id as string);
 }
 
@@ -135,7 +145,7 @@ export async function resetAdminPassword(token: string, password: string): Promi
 /** Adds a person; they set their own password from the invite link. */
 export async function inviteAdmin(email: string, name: string): Promise<{ token: string } | "exists"> {
   const res = await db()`
-    insert into admin_users (email, name, password_hash) values (${normEmail(email)}, ${name.trim().slice(0, 80)}, ${PENDING})
+    insert into admin_users (email, name, password_hash, role) values (${normEmail(email)}, ${name.trim().slice(0, 80)}, ${PENDING}, 'staff')
     on conflict (email) do nothing returning id`;
   if (!res.length) return "exists";
   return { token: await issueReset(res[0].id as string, INVITE_TTL_MIN) };

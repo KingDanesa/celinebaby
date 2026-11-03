@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { SESSION_COOKIE, adminAccountsEnabled, adminCookie, checkPassword, createSessionValue, requireAdmin } from "./auth";
+import { SESSION_COOKIE, adminAccountsEnabled, adminCookie, checkPassword, createSessionValue, currentAdmin, requireAdmin } from "./auth";
+import { audit } from "./audit";
 import { sendAdminLinkEmail } from "@/lib/email";
 import { clientIp, tooMany } from "@/lib/rate-limit";
 import { siteUrl } from "@/lib/site";
@@ -11,6 +12,7 @@ import { siteUrl } from "@/lib/site";
 export type FormState = { error?: string; ok?: string; link?: string; values?: Record<string, string> };
 
 const slow = () => new Promise((r) => setTimeout(r, 400));
+const OWNER_ONLY = "Добавлять и удалять сотрудников может только владелец аккаунта.";
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const pwError = (pw: string) => (pw.length < 10 ? "Пароль не короче 10 символов" : pw.length > 200 ? "Слишком длинный пароль" : null);
 
@@ -42,14 +44,18 @@ export async function loginAction(_prev: FormState | undefined, formData: FormDa
   if (!EMAIL_RE.test(email)) return { values: { email }, error: "Укажите e-mail" };
   const token = (await users.signInAdmin(email, password)) ?? (await users.bootstrapFirstAdmin(email, password));
   if (!token) {
+    await audit("login_failed", { email });
     await slow();
     return { values: { email }, error: "Неверный e-mail или пароль" };
   }
   await setSession(token);
+  const me = await users.adminFromSession(token);
+  await audit("login", { admin: me, email });
   redirect("/admin");
 }
 
 export async function logoutAction() {
+  await audit("logout", { admin: await currentAdmin() });
   const jar = await cookies();
   if (adminAccountsEnabled()) {
     const { signOutAdmin } = await import("./users");
@@ -80,10 +86,12 @@ export async function resetPasswordAction(_prev: FormState | undefined, formData
   const bad = pwError(password);
   if (bad) return { error: bad };
   if (password !== repeat) return { error: "Пароли не совпадают" };
-  const { resetAdminPassword } = await import("./users");
+  const { adminForResetToken, resetAdminPassword } = await import("./users");
+  const who = await adminForResetToken(token);
   const session = await resetAdminPassword(token, password);
   if (!session) return { error: "Ссылка недействительна или устарела. Запросите новую." };
   await setSession(session);
+  await audit("password_reset", { admin: who, details: [who?.pending ? "Сотрудник принял приглашение и задал пароль" : "Пароль задан по ссылке из письма"] });
   redirect("/admin?welcome=1");
 }
 
@@ -106,13 +114,15 @@ export async function changePasswordAction(_prev: FormState | undefined, formDat
     return { error: "Текущий пароль неверный" };
   }
   await setSession(res);
+  await audit("password_changed", { admin: me });
   return { ok: "Пароль изменён. На других устройствах нужно войти заново." };
 }
 
 /* ---------------- team ---------------- */
 
 export async function inviteAction(_prev: FormState | undefined, formData: FormData): Promise<FormState> {
-  await requireAdmin();
+  const me = await requireAdmin();
+  if (me.role !== "owner") return { error: OWNER_ONLY };
   if (!adminAccountsEnabled()) return { error: "Доступно только на боевом сервере." };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
@@ -122,6 +132,7 @@ export async function inviteAction(_prev: FormState | undefined, formData: FormD
   if (res === "exists") return { values: { email, name }, error: "Этот e-mail уже есть в админке" };
   const link = `${siteUrl()}/admin/reset?token=${encodeURIComponent(res.token)}`;
   const sent = await sendAdminLinkEmail(email, link, "invite", name);
+  await audit("staff_invited", { admin: me, target: email, label: name || email });
   revalidatePath("/admin/access");
   return {
     ok: sent ? `Приглашение отправлено на ${email}. Ссылка действует 3 дня.` : `Письмо не ушло (почта не настроена). Отправьте ссылку сотруднику сами, она действует 3 дня:`,
@@ -130,21 +141,28 @@ export async function inviteAction(_prev: FormState | undefined, formData: FormD
 }
 
 export async function resendInviteAction(email: string): Promise<FormState> {
-  await requireAdmin();
+  const me = await requireAdmin();
+  if (me.role !== "owner") return { error: OWNER_ONLY };
   const { createAdminReset } = await import("./users");
   const reset = await createAdminReset(email);
   if (!reset) return { error: "Не найден" };
   const link = `${siteUrl()}/admin/reset?token=${encodeURIComponent(reset.token)}`;
   const sent = await sendAdminLinkEmail(email, link, "invite", reset.name);
+  await audit("invite_resent", { admin: me, target: email, label: reset.name || email });
   return sent ? { ok: `Ссылка отправлена на ${email}` } : { ok: "Почта не настроена. Отправьте ссылку сами:", link };
 }
 
 export async function removeAdminAction(id: string): Promise<FormState> {
   const me = await requireAdmin();
+  if (me.role !== "owner") return { error: OWNER_ONLY };
   if (id === me.id) return { error: "Нельзя удалить самого себя" };
-  const { countAdmins, removeAdmin } = await import("./users");
+  const { countAdmins, getAdmin, removeAdmin } = await import("./users");
+  const target = await getAdmin(id);
+  if (!target) return { error: "Не найден" };
+  if (target.role === "owner") return { error: "Аккаунт владельца удалить нельзя" };
   if ((await countAdmins()) <= 1) return { error: "В админке должен остаться хотя бы один человек" };
   await removeAdmin(id);
+  await audit("staff_removed", { admin: me, target: target.email, label: target.name || target.email });
   revalidatePath("/admin/access");
   return { ok: "Доступ удалён" };
 }

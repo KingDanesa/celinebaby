@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ExternalLink, Inbox, KeyRound, Newspaper, LayoutDashboard, LogOut, Menu, Package, ShoppingBag, Tags, Users, X } from "lucide-react";
+import { ExternalLink, History, Inbox, KeyRound, Newspaper, LayoutDashboard, LogOut, Menu, Package, ShoppingBag, Tags, Users, X } from "lucide-react";
 import { cn } from "@/lib/format";
 import { logoutAction } from "@/lib/admin/access-actions";
 import { Wordmark } from "@/components/ui/Logo";
@@ -19,13 +19,13 @@ const nav = [
   { href: "/admin/access", label: "Доступ", icon: KeyRound },
 ];
 
-export function AdminSidebar({ who }: { who: string }) {
+export function AdminSidebar({ who, owner }: { who: string; owner: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const links = (
     <nav className="flex flex-col gap-1">
-      {nav.map((n) => {
+      {[...nav, ...(owner ? [{ href: "/admin/log", label: "Журнал", icon: History, exact: false }] : [])].map((n) => {
         const active = n.exact ? pathname === n.href : pathname.startsWith(n.href);
         return (
           <Link
