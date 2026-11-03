@@ -11,40 +11,9 @@ import { cn, imageUrl } from "@/lib/format";
 import type { MenuData } from "@/lib/menu";
 import { locales, localeNames, type Locale } from "@/i18n/config";
 import { STORE } from "@/data/categories";
+import { AnnouncementStrip } from "./AnnouncementStrip";
 
-/** The strip above the header. On a phone only one line fits, so two lines take turns. */
-function AnnouncementBar({ lines, link }: { lines: string[]; link: string }) {
-  const { href } = useI18n();
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    if (lines.length < 2) return;
-    const id = setInterval(() => setI((n) => (n + 1) % lines.length), 4000);
-    return () => clearInterval(id);
-  }, [lines.length]);
-  if (lines.length === 0) return null;
-  const inner = (
-    <div className="container-x flex h-9 items-center justify-center gap-6 text-center text-[10.5px] font-semibold uppercase tracking-[0.14em] sm:text-[11px]">
-      {lines.map((l, n) => (
-        <span key={n} className={cn("max-w-full truncate", n === i % lines.length ? "inline-block" : "hidden sm:inline-block")}>
-          {l}
-        </span>
-      ))}
-    </div>
-  );
-  return (
-    <div className="bg-burgundy-deep text-white/85">
-      {link ? (
-        <Link href={link.startsWith("/") ? href(link) : link} className="block transition hover:text-white">
-          {inner}
-        </Link>
-      ) : (
-        inner
-      )}
-    </div>
-  );
-}
-
-export function Header({ menu, userName, announcement }: { menu: MenuData; userName: string | null; announcement: { lines: string[]; link: string } }) {
+export function Header({ menu, userName, announcement }: { menu: MenuData; userName: string | null; announcement: { text: string; link: string }[] }) {
   const { t, href, locale } = useI18n();
   const { count, wishlist, open, hydrated } = useCart();
   const pathname = usePathname();
@@ -110,7 +79,7 @@ export function Header({ menu, userName, announcement }: { menu: MenuData; userN
 
   return (
     <>
-      <AnnouncementBar lines={announcement.lines} link={announcement.link} />
+      <AnnouncementStrip items={announcement.map((a) => ({ text: a.text, link: a.link.startsWith("/") ? href(a.link) : a.link }))} />
 
       <header
         className={cn(

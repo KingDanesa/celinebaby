@@ -16,13 +16,14 @@ export default async function AnnouncementPage() {
   // Until the first save the site shows the default texts, so the form starts from them.
   const value: Announcement = (await getAnnouncement()) ?? {
     enabled: true,
-    ru: [ru.announcement, ru.announcement2],
-    kk: [kk.announcement, kk.announcement2],
-    link: "",
+    items: [
+      { ru: ru.announcement, kk: kk.announcement, link: "" },
+      { ru: ru.announcement2, kk: kk.announcement2, link: "" },
+    ],
   };
   return (
     <>
-      <PageTitle title="Объявление" subtitle="Тёмная полоска с текстом над шапкой сайта. Например, о новом промокоде, акции или сроках доставки." />
+      <PageTitle title="Объявление" subtitle="Тёмная полоска над шапкой сайта: промокоды, акции, доставка. Надписей сколько угодно — они сменяют друг друга." />
       {!dbEnabled() && (
         <Card className="mb-6">
           <p className="text-[14px] text-ink-soft">Объявление меняется на боевом сервере.</p>

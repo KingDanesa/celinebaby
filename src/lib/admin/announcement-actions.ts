@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "./auth";
 import { audit } from "./audit";
 import { dbEnabled } from "@/lib/db";
-import { getAnnouncement, saveAnnouncement, type Announcement } from "@/lib/announcement";
+import { MAX_ITEMS, getAnnouncement, saveAnnouncement, type Announcement, type AnnouncementItem } from "@/lib/announcement";
 
 export type AnnouncementFormState = { ok?: string; error?: string };
 
 const MAX = 80;
-const clean = (v: FormDataEntryValue | null) => String(v ?? "").replace(/\s+/g, " ").trim();
+const clean = (v: FormDataEntryValue | null | undefined) => String(v ?? "").replace(/\s+/g, " ").trim();
 
 /** "/catalog/x", "https://celinebaby.kz/ru/catalog/x" → "/catalog/x"; other https links stay as they are. */
 function normalizeLink(raw: string): string | null {
@@ -22,30 +22,36 @@ function normalizeLink(raw: string): string | null {
   return null;
 }
 
+const itemKey = (it: AnnouncementItem) => `${it.ru}|${it.kk}|${it.link}`;
+
 export async function saveAnnouncementAction(_prev: AnnouncementFormState | undefined, form: FormData): Promise<AnnouncementFormState> {
   const me = await requireAdmin();
   if (!dbEnabled()) return { error: "Объявление меняется на боевом сервере." };
-  const a: Announcement = {
-    enabled: form.get("enabled") === "on",
-    ru: [clean(form.get("ru1")), clean(form.get("ru2"))],
-    kk: [clean(form.get("kk1")), clean(form.get("kk2"))],
-    link: "",
-  };
-  if ([...a.ru, ...a.kk].some((s) => s.length > MAX)) return { error: `Каждая строка — не длиннее ${MAX} символов, иначе на телефоне не поместится.` };
-  if (a.enabled && !a.ru[0] && !a.ru[1]) return { error: "Напишите хотя бы одну строку по-русски или выключите объявление." };
-  const link = normalizeLink(clean(form.get("link")));
-  if (link === null) return { error: "Ссылка: страница нашего сайта (например, /catalog/novinki) или полный адрес, начинающийся с https://" };
-  a.link = link;
+  const ru = form.getAll("ru"), kk = form.getAll("kk"), links = form.getAll("link");
+  const items: AnnouncementItem[] = [];
+  for (let i = 0; i < ru.length; i++) {
+    const it = { ru: clean(ru[i]), kk: clean(kk[i]), link: clean(links[i]) };
+    if (!it.ru && !it.kk && !it.link) continue; // an empty row is just dropped
+    const n = items.length + 1;
+    if (!it.ru) return { error: `Надпись ${n}: напишите текст по-русски или удалите её.` };
+    if (it.ru.length > MAX || it.kk.length > MAX) return { error: `Надпись ${n}: не длиннее ${MAX} символов, иначе на телефоне не поместится.` };
+    const link = normalizeLink(it.link);
+    if (link === null) return { error: `Надпись ${n}, ссылка: страница нашего сайта (например, /catalog/novinki) или полный адрес, начинающийся с https://` };
+    items.push({ ...it, link });
+  }
+  if (items.length > MAX_ITEMS) return { error: `Не больше ${MAX_ITEMS} надписей.` };
+  const a: Announcement = { enabled: form.get("enabled") === "on", items };
+  if (a.enabled && items.length === 0) return { error: "Добавьте хотя бы одну надпись или выключите полоску." };
 
   const before = await getAnnouncement();
   await saveAnnouncement(a);
   const details: string[] = [];
   if (!before || before.enabled !== a.enabled) details.push(a.enabled ? "Показывается" : "Скрыто");
-  const ruText = a.ru.filter(Boolean).join(" · ");
-  if (!before || before.ru.join("|") !== a.ru.join("|")) details.push(`Текст: ${ruText || "—"}`);
-  if (!before || before.kk.join("|") !== a.kk.join("|")) details.push("Текст на казахском изменён");
-  if ((before?.link ?? "") !== a.link) details.push(`Ссылка: ${a.link || "нет"}`);
-  if (details.length) await audit("announcement_updated", { admin: me, label: ruText.slice(0, 80) || "объявление", details });
+  if (!before || before.items.map(itemKey).join("\n") !== items.map(itemKey).join("\n")) {
+    items.forEach((it, i) => details.push(`${i + 1}. ${it.ru}${it.link ? ` → ${it.link}` : ""}`));
+    if (!items.length) details.push("Надписей нет");
+  }
+  if (details.length) await audit("announcement_updated", { admin: me, label: items[0]?.ru.slice(0, 80) || "объявление", details });
   revalidatePath("/", "layout");
   return { ok: "Сохранено. На сайте уже видно." };
 }
