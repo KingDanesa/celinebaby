@@ -68,7 +68,8 @@ export default async function ProductPage({ params }: Props) {
                 </span>
               )}
               <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t.product.inStock}
+                <span className={product.inStock ? "h-1.5 w-1.5 rounded-full bg-emerald-500" : "h-1.5 w-1.5 rounded-full bg-muted"} />{" "}
+                {product.inStock ? t.product.inStock : t.product.outOfStock}
               </span>
             </div>
             <Price price={product.price} oldPrice={product.oldPrice} size="lg" className="mt-5" />

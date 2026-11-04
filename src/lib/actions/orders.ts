@@ -21,7 +21,9 @@ export interface PlaceOrderInput {
 
 const clip = (s: string | undefined, n: number) => (s ?? "").trim().slice(0, n);
 
-export async function placeOrder(input: PlaceOrderInput): Promise<{ ok: true; id: string; next: string } | { ok: false; error: string }> {
+export async function placeOrder(
+  input: PlaceOrderInput,
+): Promise<{ ok: true; id: string; next: string } | { ok: false; error: string; unavailable?: number[] }> {
   if (!input.items?.length || input.items.length > 100) return { ok: false, error: "empty" };
   if (!input.customer?.name?.trim() || !input.customer?.phone?.trim() || !input.customer?.city?.trim()) {
     return { ok: false, error: "required" };
@@ -31,11 +33,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{ ok: true; id
   const products = await loadProducts();
   const byId = new Map(products.map((p) => [p.id, p]));
   const items: CartItem[] = [];
+  const unavailable: number[] = [];
   for (const i of input.items) {
     const p = byId.get(Number(i.productId));
-    if (!p || p.inStock === false) return { ok: false, error: "unavailable" };
+    if (!p || p.inStock === false) {
+      unavailable.push(Number(i.productId));
+      continue;
+    }
     items.push({ ...i, name: p.name, slug: p.slug, price: p.price, qty: Math.max(1, Math.min(99, Math.round(Number(i.qty) || 1))) });
   }
+
+  if (unavailable.length) return { ok: false, error: "unavailable", unavailable };
 
   // The discount is always recomputed here: the browser only sends the code.
   const itemsTotal = items.reduce((s, i) => s + i.price * i.qty, 0);

@@ -22,6 +22,7 @@ export function ProductBuyBox({ product }: { product: Product }) {
   const wished = hydrated && inWishlist(product.id);
 
   const submit = () => {
+    if (!product.inStock) return;
     if (sizes.length > 0 && !size) {
       setError(true);
       return;
@@ -92,7 +93,7 @@ export function ProductBuyBox({ product }: { product: Product }) {
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="flex h-12 items-center justify-between rounded-full border border-line bg-white px-2 sm:w-32">
+        <div className={cn("flex h-12 items-center justify-between rounded-full border border-line bg-white px-2 sm:w-32", !product.inStock && "hidden")}>
           <button type="button" aria-label="-" onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-2 text-muted hover:text-ink">
             <Minus className="h-4 w-4" />
           </button>
@@ -101,10 +102,16 @@ export function ProductBuyBox({ product }: { product: Product }) {
             <Plus className="h-4 w-4" />
           </button>
         </div>
-        <button type="button" onClick={submit} className={cn("btn-dark h-12 flex-1 text-[14px]", added && "bg-rose-600 hover:bg-rose-600")}>
-          {added ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
-          {added ? t.product.added : t.product.addToCart}
-        </button>
+        {product.inStock ? (
+          <button type="button" onClick={submit} className={cn("btn-dark h-12 flex-1 text-[14px]", added && "bg-rose-600 hover:bg-rose-600")}>
+            {added ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
+            {added ? t.product.added : t.product.addToCart}
+          </button>
+        ) : (
+          <button type="button" disabled className="btn-dark h-12 flex-1 cursor-not-allowed text-[14px] opacity-50">
+            {t.product.outOfStock}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {

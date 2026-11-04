@@ -21,6 +21,7 @@ export function CheckoutForm({ user, online }: { user: SiteUser | null; online: 
   const [delivery, setDelivery] = useState(t.checkout.deliveryMethods[0].id);
   const [payment, setPayment] = useState(online.halyk ? "halyk" : online.kaspi ? "kaspi_online" : "kaspi");
   const [error, setError] = useState(false);
+  const [unavailable, setUnavailable] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   if (!hydrated) return <div className="container-x py-20" />;
@@ -48,6 +49,7 @@ export function CheckoutForm({ user, online }: { user: SiteUser | null; online: 
     }
     setBusy(true);
     setError(false);
+    setUnavailable([]);
     placeOrder({
       items,
       delivery,
@@ -62,6 +64,9 @@ export function CheckoutForm({ user, online }: { user: SiteUser | null; online: 
             // The code stopped working between the cart and the order: drop it and show the new total.
             setPromo(null);
             setPromoGone(true);
+          } else if (res.unavailable?.length) {
+            const ids = new Set(res.unavailable);
+            setUnavailable([...new Set(items.filter((i) => ids.has(Number(i.productId))).map((i) => i.name))]);
           } else setError(true);
           setBusy(false);
           return;
@@ -176,6 +181,16 @@ export function CheckoutForm({ user, online }: { user: SiteUser | null; online: 
             </div>
             {promoGone && <p className="mt-4 rounded-xl bg-cream px-4 py-2 text-[13px] text-ink">{t.cart.promoGone}</p>}
             {error && <p className="mt-4 rounded-xl bg-rose-100 px-4 py-2 text-[13px] text-rose-800">{t.checkout.required}</p>}
+            {unavailable.length > 0 && (
+              <div className="mt-4 rounded-xl bg-rose-100 px-4 py-2 text-[13px] text-rose-800">
+                <p>{t.checkout.unavailable}</p>
+                <ul className="mt-1 list-disc pl-5">
+                  {unavailable.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
               <Lock className="h-4 w-4" /> {payment === "halyk" || payment === "kaspi_online" ? t.checkout.pay : t.checkout.place} · {formatPrice(total)}
             </button>

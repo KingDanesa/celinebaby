@@ -70,6 +70,7 @@ export function ProductCard({
           {(badge === "new" || product.showInNew) && <Tag>{t.catalog.tagNew}</Tag>}
           {product.tags.includes("hit") && <Tag tone="rose">{t.catalog.tagHit}</Tag>}
           {product.tags.includes("sale") && <Tag tone="dark">{t.catalog.tagSale}</Tag>}
+          {!product.inStock && <Tag tone="muted">{t.product.outOfStock}</Tag>}
         </div>
         {sizes.length > 0 && (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 hidden translate-y-2 flex-wrap gap-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:flex">
@@ -126,9 +127,10 @@ export function ProductCard({
   );
 }
 
-function Tag({ children, tone = "light" }: { children: React.ReactNode; tone?: "light" | "rose" | "dark" }) {
+function Tag({ children, tone = "light" }: { children: React.ReactNode; tone?: "light" | "rose" | "dark" | "muted" }) {
   const tones = {
     light: "bg-white/90 text-ink",
+    muted: "bg-white/90 text-muted",
     rose: "bg-rose-600 text-white",
     dark: "bg-ink text-white",
   };
